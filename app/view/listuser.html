@@ -1,0 +1,154 @@
+{% extends "main.html" %}
+{% block main %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Lista de Usuários</h5>
+            <a href="/usuario/cadastro" class="btn btn-info">
+                <i class="fa-solid fa-plus"></i> Novo Cadastro
+            </a>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped" id="tabelaUsuarios">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Nome</th>
+                        <th>Sobrenome</th>
+                        <th>CPF/CNPJ</th>
+                        <th>RG</th>
+                        <th>IE</th>
+                        <th>Email</th>
+                        <th>Senha</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar -->
+<div class="modal fade" id="modalEditar" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Editar Usuário</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="formEditar">
+          <input type="hidden" id="editId">
+          <div class="mb-3"><label>Nome</label><input type="text" id="editNome" class="form-control"></div>
+          <div class="mb-3"><label>Sobrenome</label><input type="text" id="editSobrenome" class="form-control"></div>
+          <div class="mb-3"><label>CPF/CNPJ</label><input type="text" id="editCpfcnpj" class="form-control"></div>
+          <div class="mb-3"><label>RG</label><input type="text" id="editRg" class="form-control"></div>
+          <div class="mb-3"><label>IE</label><input type="text" id="editIe" class="form-control"></div>
+          <div class="mb-3"><label>Email</label><input type="email" id="editEmail" class="form-control"></div>
+          <div class="mb-3"><label>Senha</label><input type="password" id="editSenha" class="form-control"></div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary" id="salvarEdicao">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Excluir -->
+<div class="modal fade" id="modalExcluir" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">Excluir Usuário</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">Tem certeza que deseja excluir este usuário?</div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-danger" id="confirmarExclusao">Excluir</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    let usuarios = JSON.parse(localStorage.getItem("usuarios")) || [];
+    let usuarioEditando = null;
+    let usuarioExcluindo = null;
+    const tabelaBody = document.querySelector("#tabelaUsuarios tbody");
+    const modalEditar = new bootstrap.Modal(document.getElementById("modalEditar"));
+    const modalExcluir = new bootstrap.Modal(document.getElementById("modalExcluir"));
+
+    function renderUsuarios() {
+        tabelaBody.innerHTML = "";
+        if (!usuarios.length) {
+            tabelaBody.innerHTML = `<tr><td colspan="9" class="text-center">Nenhum usuário cadastrado.</td></tr>`;
+            return;
+        }
+        usuarios.forEach(u => {
+            tabelaBody.innerHTML += `
+                <tr>
+                    <td>${u.id}</td>
+                    <td>${u.nome}</td>
+                    <td>${u.sobrenome}</td>
+                    <td>${u.cpfcnpj || "-"}</td>
+                    <td>${u.rg || "-"}</td>
+                    <td>${u.ie || "-"}</td>
+                    <td>${u.email}</td>
+                    <td>${u.senha}</td>
+                    <td>
+                        <button class="btn btn-outline-info btn-sm me-2" onclick="abrirEditar(${u.id})"><i class="fa-solid fa-pen"></i></button>
+                        <button class="btn btn-outline-danger btn-sm" onclick="abrirExcluir(${u.id})"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>`;
+        });
+    }
+
+    window.abrirEditar = (id) => {
+        usuarioEditando = usuarios.find(u => u.id === id);
+        if (!usuarioEditando) return;
+        document.getElementById("editId").value = usuarioEditando.id;
+        document.getElementById("editNome").value = usuarioEditando.nome;
+        document.getElementById("editSobrenome").value = usuarioEditando.sobrenome;
+        document.getElementById("editCpfcnpj").value = usuarioEditando.cpfcnpj || "";
+        document.getElementById("editRg").value = usuarioEditando.rg || "";
+        document.getElementById("editIe").value = usuarioEditando.ie || "";
+        document.getElementById("editEmail").value = usuarioEditando.email;
+        document.getElementById("editSenha").value = usuarioEditando.senha;
+        modalEditar.show();
+    };
+
+    document.getElementById("salvarEdicao").addEventListener("click", () => {
+        if (!usuarioEditando) return;
+        usuarioEditando.nome = document.getElementById("editNome").value.trim();
+        usuarioEditando.sobrenome = document.getElementById("editSobrenome").value.trim();
+        usuarioEditando.cpfcnpj = document.getElementById("editCpfcnpj").value.trim();
+        usuarioEditando.rg = document.getElementById("editRg").value.trim();
+        usuarioEditando.ie = document.getElementById("editIe").value.trim();
+        usuarioEditando.email = document.getElementById("editEmail").value.trim();
+        usuarioEditando.senha = document.getElementById("editSenha").value.trim();
+        localStorage.setItem("usuarios", JSON.stringify(usuarios));
+        renderUsuarios();
+        modalEditar.hide();
+    });
+
+    window.abrirExcluir = (id) => {
+        usuarioExcluindo = id;
+        modalExcluir.show();
+    };
+
+    document.getElementById("confirmarExclusao").addEventListener("click", () => {
+        usuarios = usuarios.filter(u => u.id !== usuarioExcluindo);
+        localStorage.setItem("usuarios", JSON.stringify(usuarios));
+        renderUsuarios();
+        modalExcluir.hide();
+    });
+
+    renderUsuarios();
+});
+</script>
+{% endblock %}

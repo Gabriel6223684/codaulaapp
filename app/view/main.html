@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% include "css.html"%}
+    <title>{{titulo}}</title>
+</head>
+
+<body>
+    {% include "menu.html"%}
+    {% block main %}
+
+    {% endblock %}
+    {% block script %}
+    {% include "script.html"%}
+    {% endblock %}
+
+</body>
+
+</html>

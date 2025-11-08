@@ -1,0 +1,154 @@
+{% extends "main.html" %}
+{% block main %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Lista de Clientes</h5>
+            <a href="/cliente/cadastro" class="btn btn-warning">
+                <i class="fa-solid fa-plus"></i> Novo Cliente
+            </a>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped" id="tabelaClientes">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Nome</th>
+                        <th>Sobrenome</th>
+                        <th>CPF/CNPJ</th>
+                        <th>RG</th>
+                        <th>IE</th>
+                        <th>Email</th>
+                        <th>Senha</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar -->
+<div class="modal fade" id="modalEditar" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Editar Cliente</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="formEditar">
+          <input type="hidden" id="editId">
+          <div class="mb-3"><label>Nome</label><input type="text" id="editNome" class="form-control"></div>
+          <div class="mb-3"><label>Sobrenome</label><input type="text" id="editSobrenome" class="form-control"></div>
+          <div class="mb-3"><label>CPF/CNPJ</label><input type="text" id="editCpfcnpj" class="form-control"></div>
+          <div class="mb-3"><label>RG</label><input type="text" id="editRg" class="form-control"></div>
+          <div class="mb-3"><label>IE</label><input type="text" id="editIe" class="form-control"></div>
+          <div class="mb-3"><label>Email</label><input type="email" id="editEmail" class="form-control"></div>
+          <div class="mb-3"><label>Senha</label><input type="password" id="editSenha" class="form-control"></div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary" id="salvarEdicao">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Excluir -->
+<div class="modal fade" id="modalExcluir" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">Excluir Cliente</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">Tem certeza que deseja excluir este cliente?</div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-danger" id="confirmarExclusao">Excluir</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    let clientes = JSON.parse(localStorage.getItem("clientes")) || [];
+    let clienteEditando = null;
+    let clienteExcluindo = null;
+    const tabelaBody = document.querySelector("#tabelaClientes tbody");
+    const modalEditar = new bootstrap.Modal(document.getElementById("modalEditar"));
+    const modalExcluir = new bootstrap.Modal(document.getElementById("modalExcluir"));
+
+    function renderClientes() {
+        tabelaBody.innerHTML = "";
+        if (!clientes.length) {
+            tabelaBody.innerHTML = `<tr><td colspan="9" class="text-center">Nenhum cliente cadastrado.</td></tr>`;
+            return;
+        }
+        clientes.forEach(c => {
+            tabelaBody.innerHTML += `
+                <tr>
+                    <td>${c.id}</td>
+                    <td>${c.nome}</td>
+                    <td>${c.sobrenome}</td>
+                    <td>${c.cpfcnpj || "-"}</td>
+                    <td>${c.rg || "-"}</td>
+                    <td>${c.ie || "-"}</td>
+                    <td>${c.email}</td>
+                    <td>${c.senha}</td>
+                    <td>
+                        <button class="btn btn-outline-info btn-sm me-2" onclick="abrirEditar(${c.id})"><i class="fa-solid fa-pen"></i></button>
+                        <button class="btn btn-outline-danger btn-sm" onclick="abrirExcluir(${c.id})"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>`;
+        });
+    }
+
+    window.abrirEditar = (id) => {
+        clienteEditando = clientes.find(c => c.id === id);
+        if (!clienteEditando) return;
+        document.getElementById("editId").value = clienteEditando.id;
+        document.getElementById("editNome").value = clienteEditando.nome;
+        document.getElementById("editSobrenome").value = clienteEditando.sobrenome;
+        document.getElementById("editCpfcnpj").value = clienteEditando.cpfcnpj || "";
+        document.getElementById("editRg").value = clienteEditando.rg || "";
+        document.getElementById("editIe").value = clienteEditando.ie || "";
+        document.getElementById("editEmail").value = clienteEditando.email;
+        document.getElementById("editSenha").value = clienteEditando.senha;
+        modalEditar.show();
+    };
+
+    document.getElementById("salvarEdicao").addEventListener("click", () => {
+        if (!clienteEditando) return;
+        clienteEditando.nome = document.getElementById("editNome").value.trim();
+        clienteEditando.sobrenome = document.getElementById("editSobrenome").value.trim();
+        clienteEditando.cpfcnpj = document.getElementById("editCpfcnpj").value.trim();
+        clienteEditando.rg = document.getElementById("editRg").value.trim();
+        clienteEditando.ie = document.getElementById("editIe").value.trim();
+        clienteEditando.email = document.getElementById("editEmail").value.trim();
+        clienteEditando.senha = document.getElementById("editSenha").value.trim();
+        localStorage.setItem("clientes", JSON.stringify(clientes));
+        renderClientes();
+        modalEditar.hide();
+    });
+
+    window.abrirExcluir = (id) => {
+        clienteExcluindo = id;
+        modalExcluir.show();
+    };
+
+    document.getElementById("confirmarExclusao").addEventListener("click", () => {
+        clientes = clientes.filter(c => c.id !== clienteExcluindo);
+        localStorage.setItem("clientes", JSON.stringify(clientes));
+        renderClientes();
+        modalExcluir.hide();
+    });
+
+    renderClientes();
+});
+</script>
+{% endblock %}
