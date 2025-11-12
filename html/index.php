@@ -1,8 +1,11 @@
 <?php
 
+use app\database\builder\DeleteQuery;
 use Slim\Factory\AppFactory;
 
 require __DIR__ . '/../vendor/autoload.php';
+
+DeleteQuery::table('cliente')->where('id','=','1')->delete();
 
 $app = AppFactory::create();
 
