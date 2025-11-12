@@ -26,5 +26,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             cd /home/ventreminex
+            sudo dos2unix instal.sh
+            sudo chmod +x instal.sh
             sudo bash instal.sh
             chown -R www-data:www-data .
