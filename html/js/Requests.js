@@ -3,7 +3,7 @@ class Requests {
     static SetForm(id) {
         this.form = document.getElementById(id);
         if (!this.form) {
-            throw new Error("O fomrulário não foi encintrado!");
+            throw new Error("O formulário não foi encontrado!");
         }
         return this;
     }
