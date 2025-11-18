@@ -13,6 +13,7 @@ $app->group('/usuario', function (RouteCollectorProxy $group) {
     $group->get('/lista', User::class . ':lista');
     $group->get('/cadastro', User::class . ':cadastro');
     $group->post('/insert', User::class . ':insert');
+    $group->post('/listuser', User::class . ':listuser');
 });
 
 $app->group('/cliente', function (RouteCollectorProxy $group) {

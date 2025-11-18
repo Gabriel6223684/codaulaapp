@@ -4,6 +4,7 @@ namespace app\controller;
 
 use app\database\builder\DeleteQuery;
 use app\database\builder\InsertQuery;
+use app\database\builder\SelectQuery;
 
 class User extends Base
 {
@@ -86,5 +87,38 @@ class User extends Base
             $response->getBody()->write('Erro: ' . $th->getMessage());
             return $response->withStatus(500);
         }
+    }
+    public function listuser($request, $response)
+    {
+        $form = $request->getParseBody();
+        $order = $form['order'][0]['column'];
+        $orderType = $form['order'][0]['dir'];
+        $start = $form['start'];
+        $length = $form['length'];
+        $term = $form['search']['value'];
+        var_dump($term);
+
+        $query = SelectQuery::select('id,nome,sobrenome')->from('usuario');
+        /*if (!is_null($term) && ($term !== '')) {
+            $query->where('usuario.nome', 'ilike', "{%$term%}", 'or')
+                ->where('usuario.sobrenome', 'ilike', "{%$term%}");
+        }*/
+        $users = $query->fetchAll();
+        $userData = [];
+        foreach ($users as $key => $value) {
+            $userData[$key] = [
+                $value['id'],
+                $value['nome'],
+                $value['sobrenome'],
+                "<button class='btn btn-warning'>Editar</button>
+                <button class='btn btn-danger'>Excluir</button>"
+            ];
+        }
+        $data = [
+            'status' => true,
+            'recordsTotal' => count($users),
+            'recordsFiltered' => count($users),
+            'data' => $userData
+        ];
     }
 }
