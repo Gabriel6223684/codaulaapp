@@ -4,7 +4,7 @@ header('Content-Type: application/json'); // Retorna JSON
 // Conexão com o banco de dados (substitua com seus dados)
 $host = "localhost";
 $db   = "senac5";
-$user = "cliente";
+$user = "empresa";
 $pass = "senac";
 
 try {
@@ -26,19 +26,19 @@ $action = $_POST['action'] ?? '';
 switch($action) {
 
     case 'list':
-        $stmt = $pdo->query("SELECT id, nome, cpf_cnpj, email FROM cliente"); // Não retorna senha
-        $cliente = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        echo json_encode($cliente);
+        $stmt = $pdo->query("SELECT id, nome, cpf_cnpj, email FROM fornecedor"); // Não retorna senha
+        $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        echo json_encode($fornecedor);
         break;
 
     case 'create':
         $nome = trim($_POST['nome'] ?? '');
-        $cpfcnpj = trim($_POST['cpf_cnpj'] ?? '');
+        $cpf_cnpj = trim($_POST['cpf_cnpj'] ?? '');
         $email = trim($_POST['email'] ?? '');
         $senha = $_POST['senha'] ?? '';
 
         // Validação simples
-        if (!$nome || !$cpfcnpj || !$email || !$senha) {
+        if (!$nome || !$cpf_cnpj || !$email || !$senha) {
             echo json_encode(["error" => "Todos os campos são obrigatórios"]);
             exit;
         }
@@ -50,15 +50,15 @@ switch($action) {
         // Hash da senha
         $senhaHash = password_hash($senha, PASSWORD_DEFAULT);
 
-        $stmt = $pdo->prepare("INSERT INTO cliente (nome, cpf_cnpj, email, senha) VALUES (?, ?, ?, ?)");
-        $stmt->execute([$nome, $cpfcnpj, $email, $senhaHash]);
+        $stmt = $pdo->prepare("INSERT INTO empresa (nome, cpf_cnpj, email, senha) VALUES (?, ?, ?, ?)");
+        $stmt->execute([$nome, $cpf_cnpj, $email, $senhaHash]);
         echo json_encode(["success" => true]);
         break;
 
     case 'update':
         $id = $_POST['id'] ?? '';
         $nome = trim($_POST['nome'] ?? '');
-        $cpfcnpj = trim($_POST['cpf_cnpj'] ?? '');
+        $cpf_cnpj = trim($_POST['cpf_cnpj'] ?? '');
         $email = trim($_POST['email'] ?? '');
         $senha = $_POST['senha'] ?? '';
 
@@ -74,12 +74,12 @@ switch($action) {
         if ($senha) {
             // Atualiza a senha somente se foi preenchida
             $senhaHash = password_hash($senha, PASSWORD_DEFAULT);
-            $stmt = $pdo->prepare("UPDATE cliente SET nome=?, cpf_cnpj=?, email=?, senha=? WHERE id=?");
-            $stmt->execute([$nome, $cpfcnpj, $email, $senhaHash, $id]);
+            $stmt = $pdo->prepare("UPDATE empresa SET nome=?, cpf_cnpj=?, email=?, senha=? WHERE id=?");
+            $stmt->execute([$nome, $cpf_cnpj, $email, $senhaHash, $id]);
         } else {
             // Não altera a senha
-            $stmt = $pdo->prepare("UPDATE cliente SET nome=?, cpf_cnpj=?, email=? WHERE id=?");
-            $stmt->execute([$nome, $cpfcnpj, $email, $id]);
+            $stmt = $pdo->prepare("UPDATE empresa SET nome=?, cpfcnpj=?, email=? WHERE id=?");
+            $stmt->execute([$nome, $cpf_cnpj, $email, $id]);
         }
 
         echo json_encode(["success" => true]);
@@ -91,7 +91,7 @@ switch($action) {
             echo json_encode(["error" => "ID é obrigatório"]);
             exit;
         }
-        $stmt = $pdo->prepare("DELETE FROM cliente WHERE id=?");
+        $stmt = $pdo->prepare("DELETE FROM empresa WHERE id=?");
         $stmt->execute([$id]);
         echo json_encode(["success" => true]);
         break;

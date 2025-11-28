@@ -9,12 +9,14 @@ class Requests {
     }
     static async Post(url) {
         const formData = new FormData(this.form);
-        const option = {
+        fetch('http://localhost/cliente/insert', {
             method: 'POST',
-            body: formData,
-            cache: 'default',
-            mode: 'cors'
-        };
+            body: JSON.stringify(dados),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
         const response = await fetch(url, option);
         return await response.json();
     }

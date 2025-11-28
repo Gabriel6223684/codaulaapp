@@ -25,3 +25,6 @@ const tabela = new $('#tabela').DataTable({
         { title: "Ações", orderable: false, searchable: false }
     ]
 });
+
+$('#cpfcnpj').inputmask({ 'mask': ['999.999.999-99', '99.999.999/9999-99'] });
+$('#telefone').inputmask({ 'mask': ['(99) 99 9 9999-9999'] });

@@ -9,11 +9,11 @@ $('#telefone').inputmask({ 'mask': ['(99) 99999-9999'] });
 
 // Cadastrar fornecedor
 Cadastrar.addEventListener('click', async () => {
-    const response = await Requests.SetForm('formCadastro').Post('/fornecedor/insert');
+    const response = await Requests.SetForm('formCadastro').Post('/empresa/insert');
     console.log(response);
 
     if (response.status) {
-        alert("Fornecedor cadastrado com sucesso!");
+        alert("Empresa cadastrado com sucesso!");
     } else {
         alert(response.msg);
     }

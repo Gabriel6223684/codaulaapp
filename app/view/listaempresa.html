@@ -1,0 +1,75 @@
+{% extends "main.html" %}
+{% block main %}
+<div class="container mt-4">
+  <form id="form">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Lista de Empresas</h5>
+        <a href="/empresa/cadastro" class="btn btn-success">
+          <i class="fa-solid fa-plus"></i> Novo Cadastro
+        </a>
+      </div>
+      <div class="card-body">
+        <table class="table table-striped" id="tabela">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Nome completo</th>
+              <th>CPF</th>
+              <th>Email</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- Modal Editar -->
+<div class="modal fade" id="modalEditar" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Editar Empresa</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="formEditar">
+          <input type="hidden" id="editId">
+          <div class="mb-3"><label>Nome</label><input type="text" id="editNome" class="form-control"></div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary" id="salvarEdicao">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Excluir -->
+<div class="modal fade" id="modalExcluir" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">Excluir empresa</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">Tem certeza que deseja excluir esta empresa?</div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-danger" id="confirmarExclusao">Excluir</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{% endblock %}
+
+{% block script %}
+{% include "script.html"%}
+<script type="module" src="/js/listaempresa.js"></script>
+{% endblock %}

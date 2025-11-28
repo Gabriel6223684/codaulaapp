@@ -38,7 +38,8 @@ class Cliente extends Base
             0 => 'id',
             1 => 'nome',
             2 => 'email',
-            3 => 'cpf_cnpj'
+            3 => 'cpf_cnpj',
+            3 => 'senha'
         ];
         #Capturamos o nome do capo a ser ordenado.
         $orderField = $fields[$order];
@@ -49,7 +50,8 @@ class Cliente extends Base
         if (!is_null($term) && ($term !== '')) {
             $query->where('cliente.nome', 'ilike', "%{$term}%", 'or')
                 ->where('cliente.email', 'ilike', "%{$term}%", 'or')
-                ->where('cliente.cpf_cnpj', 'ilike', "%{$term}%");
+                ->where('cliente.cpf_cnpj', 'ilike', "%{$term}%")
+                ->where('cliente.senha', 'ilike', "%{$term}");
         }
         $cliente = $query
             ->order($orderField, $orderType)
@@ -62,6 +64,7 @@ class Cliente extends Base
                 $value['nome'],
                 $value['cpf_cnpj'],
                 $value['email'],
+                $value['senha'],
                 "<button class='btn btn-warning'>Editar</button>
                 <button class='btn btn-danger'>Excluir</button>"
             ];
@@ -100,109 +103,45 @@ class Cliente extends Base
     {
         $form = $request->getParsedBody();
 
-        $dados = [
-            'nome_completo' => $form['nome'] ?? '',
-            'cpf'           => $form['cpfcnpj'] ?? '',
-            'email'         => $form['email'] ?? '',
-            'senha'         => password_hash($form['senha'] ?? '', PASSWORD_DEFAULT)
-        ];
-
-        // Validação
-        if (!$dados['nome_completo'] || !$dados['cpf'] || !$dados['email'] || !$form['senha']) {
-            $response->getBody()->write(json_encode([
-                'status' => false,
-                'msg' => 'Todos os campos são obrigatórios'
-            ]));
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        // 1. Validação dos campos obrigatórios
+        $requiredFields = ['nome', 'cpf_cnpj', 'email', 'senha'];
+        foreach ($requiredFields as $field) {
+            if (empty($form[$field])) {
+                $response->getBody()->write(json_encode([
+                    'status' => false,
+                    'msg' => "O campo '{$field}' é obrigatório."
+                ]));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
         }
 
-        try {
-            $ok = InsertQuery::table('cliente')->save($dados);
-            $id = InsertQuery::table('cliente')->getLastInsertId();
+        // 2. Preparar dados
+        $dados = [
+            'nome'     => $form['nome'],
+            'cpf_cnpj' => $form['cpf_cnpj'],
+            'email'    => $form['email'],
+            'senha'    => password_hash($form['senha'], PASSWORD_DEFAULT)
+        ];
 
+        try {
+            // 3. Tentar salvar no banco
+            $ok = InsertQuery::table('cliente')->save($dados);
+
+            // 4. Resposta de sucesso ou falha
             $response->getBody()->write(json_encode([
                 'status' => $ok,
-                'msg'    => $ok ? 'Cliente salvo com sucesso' : 'Falha ao inserir',
-                'data' => [
-                    'id' => $id,
-                    'nome' => $form['nome'],
-                    'cpfcnpj' => $form['cpfcnpj'],
-                    'email' => $form['email']
-                ]
+                'msg' => $ok ? 'Cliente salvo com sucesso' : 'Falha ao inserir o cliente'
             ]));
             return $response->withHeader('Content-Type', 'application/json');
         } catch (\Exception $e) {
+            // 5. Log da exceção para depuração
+            error_log("Erro ao inserir cliente: " . $e->getMessage());
+
             $response->getBody()->write(json_encode([
                 'status' => false,
-                'msg' => $e->getMessage()
+                'msg' => "Erro ao inserir cliente: " . $e->getMessage()
             ]));
             return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
-        }
-    }
-
-    public function editar($request, $response)
-    {
-        $form = $request->getParsedBody();
-
-        $id = $form['id'] ?? null;
-        $nome = $form['nome'] ?? null;
-        $cpfcnpj = $form['cpfcnpj'] ?? null;
-        $email = $form['email'] ?? null;
-        $senha = $form['senha'] ?? null;
-
-        if (!$id || !$nome || !$cpfcnpj || !$email) {
-            $response->getBody()->write(json_encode(['status' => false, 'msg' => 'Campos obrigatórios faltando']));
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
-        }
-
-        $dados = [
-            'nome_completo' => $nome,
-            'cpf' => $cpfcnpj,
-            'email' => $email
-        ];
-
-        if (!empty($senha)) {
-            $dados['senha'] = password_hash($senha, PASSWORD_DEFAULT);
-        }
-
-        try {
-            $ok = \app\database\builder\UpdateQuery::table('cliente')
-                ->set($dados)
-                ->where('id', '=', $id)
-                ->update();
-
-            $response->getBody()->write(json_encode([
-                'status' => $ok,
-                'msg' => $ok ? 'Cliente atualizado' : 'Nenhuma alteração feita'
-            ]));
-            return $response->withHeader('Content-Type', 'application/json');
-        } catch (\Exception $e) {
-            $response->getBody()->write(json_encode(['status' => false, 'msg' => $e->getMessage()]));
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
-        }
-    }
-    public function excluir($request, $response, $args)
-    {
-        $id = $args['id'] ?? null;
-        if (!$id) {
-            $response->getBody()->write(json_encode(['status' => false, 'msg' => 'ID inválido']));
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
-        }
-
-        try {
-            $ok = \app\database\builder\DeleteQuery::table('cliente')
-                ->where('id', '=', $id)
-                ->delete();
-
-            $response->getBody()->write(json_encode([
-                'status' => $ok,
-                'msg' => $ok ? 'Cliente excluído' : 'Nenhum cliente encontrado'
-            ]));
-
-            return $response->withHeader('Content-Type', 'application/json');
-        } catch (\Exception $e) {
-            $response->getBody()->write(json_encode(['status' => false, 'msg' => $e->getMessage()]));
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
         }
     }
 }
