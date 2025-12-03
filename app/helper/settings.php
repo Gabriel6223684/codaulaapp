@@ -1,4 +1,5 @@
 <?php
+session_start();
 
 #Diretório raiz da aplicação web.
 define('ROOT', dirname(__file__, 3));
