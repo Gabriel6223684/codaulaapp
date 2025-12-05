@@ -11,24 +11,19 @@
 <body>
     <form id="form">
         <div class="login-container">
-            <div class="row">
-                <div class="col-lg-6 col-md-6 col-sm-12"></div>
-
-                <div class="col-lg-6 col-md-6 col-sm-12"></div>
-            </div>
             <div class="modal-header d-flex justify-content-between align-items-start p-0 mb-3" style="border:0;">
                 <h2 class="modal-title fw-semibold text-center w-100 mt-2">Login</h2>
             </div>
             <div class="form-floating mb-3">
-                <input type="text" class="form-control" id="login" name="login" placeholder="">
-                <label for="login">Informe seu Dados</label>
+                <input type="text" class="form-control" id="login" name="login" placeholder="" autofocus>
+                <label for="login">Informe o seu: CPF ou E-MAIL ou CELULAR *</label>
             </div>
             <div class="form-floating mb-4">
                 <input type="password" class="form-control" id="senha" name="senha" placeholder="">
-                <label for="senha">Senha</label>
+                <label for="senha">Informe sua senha de acesso *</label>
             </div>
             <div class="d-flex gap-2 mb-4">
-                <button type="submit" class="btn btn-primary flex-fill">Entrar</button>
+                <button id="Login" type="button" class="btn btn-primary flex-fill">Login</button>
             </div>
             <div class="d-flex gap-2">
                 <button class="btn btn-outline-secondary flex-fill" type="button" data-bs-toggle="modal"
@@ -41,7 +36,6 @@
                 </button>
             </div>
         </div>
-
         <div class="modal fade" id="pre-cadastro" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -93,12 +87,13 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" id="preCadastro" class="btn btn-outline-primary flex-fill">Enviar</button>
+                        <button type="button" id="preCadastro" class="btn btn-outline-primary flex-fill">
+                            Enviar
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
-
         <div class="modal fade" id="recuperarSenha" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -108,17 +103,15 @@
                     </div>
                     <div class="modal-body">
                         <div class="form-floating mb-2">
-                            <input type="password" class="form-control" id="identificador" name="identificador"
-                                placeholder="">
+                            <input type="password" class="form-control" id="identificador" placeholder="">
                             <label for="identificador">Identificador</label>
                         </div>
                         <div class="form-floating mb-2">
-                            <input type="password" class="form-control" id="senhaRec" name="senhaRec" placeholder="">
+                            <input type="password" class="form-control" id="senhaRec" placeholder="">
                             <label for="senhaRec">Nova Senha</label>
                         </div>
                         <div class="form-floating mb-2">
-                            <input type="password" class="form-control" id="senhaRecConfirm" name="senhaRecConfirm"
-                                placeholder="">
+                            <input type="password" class="form-control" id="senhaRecConfirm" placeholder="">
                             <label for="senhaRecConfirm">Confirmar Nova Senha</label>
                         </div>
                     </div>
@@ -129,7 +122,6 @@
             </div>
         </div>
     </form>
-
     <style>
         body {
             height: 100vh;

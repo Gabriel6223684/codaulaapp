@@ -10,7 +10,8 @@ trait Template
     {
         try {
             $twig = Twig::create(DIR_VIEW);
-            $twig->getEnvironment()->addGlobal('EMPRESA', 'Ventre&MinexLTDA');
+            #Adicionamos uma varaivel de template Global acessivel de qualquer template
+            $twig->getEnvironment()->addGlobal('EMPRESA', 'VentreMinex');
             return $twig;
         } catch (\Exception $e) {
             throw new \Exception("Restrição: " . $e->getMessage());
@@ -20,11 +21,14 @@ trait Template
     {
         return $name . EXT_VIEW;
     }
-    public function SendJson($response, array = [], int $statusCode = 200) {
+    public function SendJson($response, array $data = [], int $statusCode = 200)
+    {
+        #Converte o arrya do PHP para formato JSON
         $payload = json_encode($data);
+        #Retorna uma resposta em formato JSON
         $response->getBody()->write($payload);
-        return $response;
-        ->withHeader('Content-Type', 'application\json')
-        ->withStatus($statusCode);
+        return $response
+            ->withHeader('Content-Type', 'application/json')
+            ->withStatus($statusCode);
     }
 }

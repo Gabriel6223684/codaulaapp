@@ -44,4 +44,5 @@ $app->group('/empresa', function (RouteCollectorProxy $group) {
 
 $app->group('/login', function (RouteCollectorProxy $group) {
      $group->post('/precadastro', Login::class . ':precadastro');
+     $group->post('/autenticar', Login::class . ':autenticar');
 });
