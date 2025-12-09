@@ -11,7 +11,9 @@ class Requests {
         const formData = new FormData(this.form);
         const option = {
             method: 'POST',
-            body: formData
+            body: formData,
+            cache: 'default',
+            mode: 'cors'
         };
         const response = await fetch(url, option);
         return await response.json();
