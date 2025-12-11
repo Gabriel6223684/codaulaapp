@@ -54,14 +54,13 @@
     <div class="login-box">
         <div class="card card-outline card-primary">
             <div class="card-header">
-                <a href="../index2.html"
-                    class="link-dark text-center link-offset-2 link-opacity-100 link-opacity-50-hover">
+                <a href="/home" class="link-dark text-center link-offset-2 link-opacity-100 link-opacity-50-hover">
                     <h1 class="mb-0"><b>Admin</b>LTE</h1>
                 </a>
             </div>
             <div class="card-body login-card-body">
                 <p class="login-box-msg">Dados com * são obrigatórios</p>
-                <form action="../index3.html" method="post">
+                <form action="/home" method="post">
                     <div class="input-group mb-1">
                         <div class="form-floating">
                             <input id="loginEmail" type="email" class="form-control" value="" placeholder="" />
@@ -101,7 +100,7 @@
 
                 <div class="social-auth-links text-center mb-3 d-grid gap-2">
                     <p>- OR -</p>
-                    <a href="#" class="btn btn-primary">
+                    <a href="/home" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalPreCadastro">
                         <i class="bi bi-facebook me-2"></i> Pré-cadastro
                     </a>
                     <a href="#" class="btn btn-danger">
@@ -111,6 +110,63 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal de Pré-Cadastro -->
+    <div class="modal fade" id="modalPreCadastro" tabindex="-1" aria-labelledby="modalPreCadastroLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalPreCadastroLabel">Pré-cadastro</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+
+                <div class="modal-body">
+                    <form id="formPreCadastro">
+                        <div class="mb-3">
+                            <label class="form-label">Nome *</label>
+                            <input type="text" class="form-control" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">E-mail *</label>
+                            <input type="email" class="form-control" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Telefone / WhatsApp *</label>
+                            <input type="text" class="form-control" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Crie uma senha *</label>
+                            <input type="password" class="form-control" required>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="salvarPreCadastro()">
+                        Registrar
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function salvarPreCadastro() {
+            // Aqui você pode enviar via AJAX / Fetch
+            alert("Pré-cadastro enviado!");
+            bootstrap.Modal.getInstance(document.getElementById('modalPreCadastro')).hide();
+        }
+    </script>
+
     <script src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.11.0/browser/overlayscrollbars.browser.es6.min.js"
         crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
