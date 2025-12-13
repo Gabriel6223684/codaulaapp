@@ -99,11 +99,13 @@
                 <div class="social-auth-links text-center mt-3">
                     <p>- OU -</p>
 
-                    <button class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#modalPreCadastro">
+                    <button type="button" class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#modalPreCadastro">
                         <i class="bi bi-person-add"></i> Pré-cadastro
                     </button>
 
-                    <a href="#" class="btn btn-danger w-100 mt-2">
+                    <!-- Botão para abrir modal -->
+                    <a href="#" class="btn btn-danger w-100 mt-2" data-bs-toggle="modal"
+                        data-bs-target="#modalRecuperarSenha">
                         <i class="bi bi-unlock"></i> Recuperar senha
                     </a>
                 </div>
@@ -114,57 +116,94 @@
 
 
     <!-- MODAL DE PRÉ-CADASTRO -->
-<div class="modal fade" id="modalPreCadastro" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
+    <div class="modal fade" id="modalPreCadastro" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
 
-            <div class="modal-header">
-                <h5 class="modal-title">Pré-cadastro</h5>
-                <button class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="modal-header">
+                    <h5 class="modal-title">Pré-cadastro</h5>
+                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+
+                    <form id="precadastro">
+
+                        <div class="mb-3">
+                            <label class="form-label">Nome *</label>
+                            <input type="text" class="form-control" id="email" name="nome" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">E-mail *</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Telefone *</label>
+                            <input type="text" class="form-control" id="telefone" name="telefone" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">WhatsApp *</label>
+                            <input type="text" class="form-control" id="whatsapp" name="whatsapp" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Crie uma senha *</label>
+                            <input type="password" class="form-control" id="senha" name="senhaCadastro" required>
+                        </div>
+
+                    </form>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button class="btn btn-primary" id="buttaoPrecadastro">Registrar</button>
+                </div>
+
             </div>
-
-            <div class="modal-body">
-
-                <form id="precadastro">
-
-                    <div class="mb-3">
-                        <label class="form-label">Nome *</label>
-                        <input type="text" class="form-control" name="nome" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">E-mail *</label>
-                        <input type="email" class="form-control" name="email" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Telefone *</label>
-                        <input type="text" class="form-control" name="celular" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">WhatsApp *</label>
-                        <input type="text" class="form-control" name="whatsapp" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Crie uma senha *</label>
-                        <input type="password" class="form-control" name="senhaCadastro" required>
-                    </div>
-
-                </form>
-
-            </div>
-
-            <div class="modal-footer">
-                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button class="btn btn-primary" id="buttaoPrecadastro">Registrar</button>
-            </div>
-
         </div>
     </div>
-</div>
 
+
+
+
+
+    <!-- Modal Recuperar Senha -->
+    <div class="modal fade" id="modalRecuperarSenha" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Recuperar Senha</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <!-- Etapa 1: Solicitar e-mail -->
+                    <div id="etapaEmail">
+                        <input type="email" id="emailRecuperar" class="form-control mb-2"
+                            placeholder="Digite seu e-mail" required>
+                    </div>
+
+                    <!-- Etapa 2: Código + nova senha -->
+                    <div id="etapaCodigo" class="d-none">
+                        <input type="text" id="codigoRecuperar" class="form-control mb-2"
+                            placeholder="Código de 6 dígitos" required>
+                        <input type="password" id="novaSenha" class="form-control" placeholder="Nova senha" required>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button class="btn btn-primary" id="btnRecuperarSenha">Enviar</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.11.0/browser/overlayscrollbars.browser.es6.min.js"
         crossorigin="anonymous"></script>
@@ -173,7 +212,13 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.min.js"
         crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/4.0.0-rc4/js/adminlte.min.js"></script>
+
     <script src="/js/login.js"></script>
+    <script src="/js/adminlte.js"></script>
+    <script src="/js/login-controller.js"></script>
+    <script src="/js/recuperasenha.js"></script>
+    <script src="/js/Node.js"></script>
+
 </body>
 
 </html>

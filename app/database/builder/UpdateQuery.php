@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Database\Builder;
+namespace app\database\builder;
 
 use app\database\Connection;
 
 class UpdateQuery
 {
     private string $table;
-    private array $fieldsAndValues = [];
-    private array $where;
-    private array $binds;
+    private array $fieldsAndValues;
+    private array $where = [];
+    private array $binds = [];
     public static function table(string $table): self
     {
         $self = new self;
@@ -21,10 +21,10 @@ class UpdateQuery
         $this->fieldsAndValues = $fieldsAndValues;
         return $this;
     }
-    public function where(string $field, string $operator, string | int | float $value, ?string $logic = null)
+    public function where(string $field, string $operator, string | int | float $value, ?string $logic = null): self
     {
         $placeHolder = '';
-        $placeHolder  = $field;
+        $placeHolder = $field;
         if (str_contains($placeHolder, '.')) {
             $placeHolder = substr($field, strpos($field, '.') + 1);
         }
@@ -32,37 +32,40 @@ class UpdateQuery
         $this->binds[$placeHolder] = $value;
         return $this;
     }
-    private function createQuery() {
+    private function createQuery(): string
+    {
         if (!$this->table) {
-            throw new \Exception("A consulta precisa invocar o método table.");
+            throw new \Exception("Por favor informe o nome da tabela!");
         }
         if (!$this->fieldsAndValues) {
-            throw new \Exception("A consulta precisad os dados para realizar a atualização.");
+            throw new \Exception("Para atualizar informe os dados!");
         }
         $query = '';
-        $query = "update {$this->table} set";
+        $query = "update {$this->table} set ";
         foreach ($this->fieldsAndValues as $field => $value) {
             $query .= "{$field} = :{$field},";
             $this->binds[$field] = $value;
         }
         $query = rtrim($query, ',');
         $query .= (isset($this->where) and (count($this->where) > 0))
-        ?
-        ' where ' . implode(' ', $this->where) :
-        '';
+            ?
+            ' where ' . implode(' ', $this->where)
+            : '';
         return $query;
     }
-    public function executeQuery($query) {
-        $connection = Connection::connection();
-        $prepare = $connection->prepare($query);
-        return $prepare->execute($this->binds ?? []);
-    }
-    public function update() {
-        $query = $this->createQuery();
+    public function executeQuery(string $query): ?bool
+    {
         try {
-            return $this->executeQuery($query);
-        } catch (\PDOException $e) {
-            throw new \Exception("Restrição: {$e->getMessage()}, SQL: " . $query);
+            $connection = Connection::connection();
+            $prepare = $connection->prepare($query);
+            return $prepare->execute($this->binds ?? []);
+        } catch (\Exception $e) {
+            throw new \Exception("Erro ao atualizar: " . $e->getMessage());
         }
+    }
+    public function update(): ?bool
+    {
+        $query = $this->createQuery();
+        return $this->executeQuery($query);
     }
 }

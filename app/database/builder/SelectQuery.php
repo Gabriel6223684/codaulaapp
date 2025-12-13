@@ -58,7 +58,9 @@ class SelectQuery
             throw new \Exception("Para realizar a consulta SQL é necessário informa a nome da tabela.");
         }
         $query = '';
-        $query = 'select ' . $this->fields . ' from ' .  $this->table;
+        $query = 'select ';
+        $query .= $this->fields . ' from ';
+        $query .= $this->table;
         $query .= (isset($this->where) and (count($this->where) > 0)) ? ' where ' . implode(' ', $this->where) : '';
         $query .= $this->order ?? '';
         $query .= $this->limits ?? '';

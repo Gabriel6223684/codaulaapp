@@ -8,36 +8,25 @@ class InsertQuery
 {
     private string $table;
     private array $FieldsAndValues = [];
-
+    #Obter o nome da tabela onde os dados serão inserido.
     public static function table(string $table): self
     {
         $self = new self;
         $self->table = $table;
         return $self;
     }
-
     private function createQuery(): string
     {
         $fields  = implode(',', array_keys($this->FieldsAndValues));
         $placeHolder = ':' . implode(',:', array_keys($this->FieldsAndValues));
-        return "INSERT INTO $this->table ($fields) VALUES ($placeHolder)";
+        return "insert into $this->table ($fields) values ($placeHolder);";
     }
-
     private function execute(string $query): bool
     {
         $con = Connection::connection();
         $prepare = $con->prepare($query);
-
-        $ok = $prepare->execute($this->FieldsAndValues);
-
-        if (!$ok) {
-            file_put_contents("insert_error.log", print_r($prepare->errorInfo(), true), FILE_APPEND);
-        }
-
-        return $ok;
+        return $prepare->execute($this->FieldsAndValues);
     }
-
-
     public function save(array $FieldsAndValues): bool
     {
         $this->FieldsAndValues = $FieldsAndValues;
@@ -47,10 +36,5 @@ class InsertQuery
         } catch (\PDOException $e) {
             throw new \Exception($e->getMessage());
         }
-    }
-
-    public function getLastInsertId(): int
-    {
-        return Connection::connection()->lastInsertId();
     }
 }
