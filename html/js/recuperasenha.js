@@ -1,24 +1,3 @@
-fetch('/recuperar-senha.php', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email })
-})
-.then(res => res.text()) // ler como texto
-.then(text => {
-    try {
-        const data = JSON.parse(text);
-        alert(data.message);
-        if (data.success) {
-            // Passa para etapa 2
-        }
-    } catch(e) {
-        console.error('Erro ao parsear JSON:', text);
-        alert('Erro no servidor. Veja console.');
-    }
-})
-.catch(err => console.error(err));
-
-
 document.addEventListener('DOMContentLoaded', function () {
     let etapa = 1; // 1 = enviar email, 2 = digitar código + nova senha
 
@@ -31,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const email = document.getElementById('emailRecuperar').value;
             if (!email) return alert('Informe um e-mail válido!');
 
-            fetch('/localhost/recuperar-senha.php', { // ajuste para o caminho correto
+            fetch('/recuperar-senha', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email })
@@ -45,7 +24,10 @@ document.addEventListener('DOMContentLoaded', function () {
                         etapaCodigoDiv.classList.remove('d-none');
                     }
                 })
-                .catch(err => console.error(err));
+                .catch(err => {
+                    console.error(err);
+                    alert('Erro no servidor. Veja console.');
+                });
 
         } else if (etapa === 2) {
             const codigo = document.getElementById('codigoRecuperar').value;
@@ -53,7 +35,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (!codigo || !senha) return alert('Informe o código e a nova senha!');
 
-            fetch('/localhost/validar-codigo.php', { // ajuste para o caminho correto
+            fetch('/validar-codigo', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ codigo, senha })
@@ -62,7 +44,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 .then(data => {
                     alert(data.message);
                     if (data.success) {
-                        const modal = bootstrap.Modal.getInstance(document.getElementById('modalRecuperarSenha'));
+                        const modalEl = document.getElementById('modalRecuperarSenha');
+                        const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
                         modal.hide();
                         etapa = 1;
                         etapaEmailDiv.classList.remove('d-none');
@@ -72,7 +55,10 @@ document.addEventListener('DOMContentLoaded', function () {
                         document.getElementById('novaSenha').value = '';
                     }
                 })
-                .catch(err => console.error(err));
+                .catch(err => {
+                    console.error(err);
+                    alert('Erro no servidor. Veja console.');
+                });
         }
     });
 });

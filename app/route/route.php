@@ -8,6 +8,7 @@ $app->get('/', Home::class . ':home');
 $app->get('/home', Home::class . ':home');
 $app->get('/login', Login::class . ':login');
 $app->post('/login/precadastro', [\app\controller\Login::class, 'precadastro']);
+$app->post('/login', [\app\controller\Login::class, 'autenticar']);
 
 $app->get('/listuser', [\app\controller\User::class, 'listuser']);
 
@@ -24,3 +25,6 @@ $app->group('/login', function (RouteCollectorProxy $group) {
     #$group->post('/tema', Home::class . ':tema');
 });
 
+// Endpoints para recuperação de senha
+$app->post('/recuperar-senha', [\app\controller\Login::class, 'recuperarSenha']);
+$app->post('/validar-codigo', [\app\controller\Login::class, 'validarCodigo']);

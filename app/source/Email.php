@@ -16,23 +16,23 @@ class Email
         $this->data = [];
         $this->mail = new PHPMailer(true);
         $this->mail->isSMTP();
-        $this->mail->isHTML();
+        $this->mail->isHTML(true);
         $this->mail->CharSet = PHPMailer::CHARSET_UTF8;
         $this->mail->Host = CONFIG_SMIP_EMAIL['host'];
         $this->mail->SMTPAuth = true;
         $this->mail->Username = CONFIG_SMIP_EMAIL['user'];
         $this->mail->Password = CONFIG_SMIP_EMAIL['passwd'];
-        $this->mail->SMSTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $enc = CONFIG_SMIP_EMAIL['encryption'] ?? 'tls';
+        $this->mail->SMTPSecure = ($enc === 'ssl') ? PHPMailer::ENCRYPTION_SMTPS : PHPMailer::ENCRYPTION_STARTTLS;
         $this->mail->Port = CONFIG_SMIP_EMAIL['port'];
     }
-    public function add(string $subjetct, string $body, string $recipient_name, string $recipient_email): self
+    public function add(string $subject, string $body, string $recipient_name, string $recipient_email): self
     {
-        $self = new self();
-        $self->data['subject'] = $subjetct;
-        $self->data['body'] = $body;
-        $self->data['recipient_name'] = $recipient_name;
-        $self->data['recipient_email'] = $recipient_email;
-        return $self;
+        $this->data['subject'] = $subject;
+        $this->data['body'] = $body;
+        $this->data['recipient_name'] = $recipient_name;
+        $this->data['recipient_email'] = $recipient_email;
+        return $this;
     }
     public function attach(string $filePath, string $fileName): self
     {
