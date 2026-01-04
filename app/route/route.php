@@ -2,29 +2,27 @@
 
 use app\controller\Home;
 use app\controller\Login;
+use app\controller\User;
 use Slim\Routing\RouteCollectorProxy;
 
+// Home
 $app->get('/', Home::class . ':home');
 $app->get('/home', Home::class . ':home');
-$app->get('/login', Login::class . ':login');
-$app->post('/login/precadastro', [\app\controller\Login::class, 'precadastro']);
-$app->post('/login', [\app\controller\Login::class, 'autenticar']);
 
-$app->get('/listuser', [\app\controller\User::class, 'listuser']);
+// Login
+$app->group('/login', function (RouteCollectorProxy $group) {
+    $group->get('', Login::class . ':login');
+    $group->post('', Login::class . ':autenticar');
+    $group->post('/precadastro', Login::class . ':precadastro');
+    $group->post('/recuperar-senha', Login::class . ':recuperarSenha');
+    $group->post('/validar-codigo', Login::class . ':validarCodigo');
+});
 
+// Usuário
 $app->group('/usuario', function (RouteCollectorProxy $group) {
-    #$group->post('/tema', Home::class . ':tema');
-    $group->get('/listuser', [\app\controller\User::class, 'listuser']);
+    $group->get('/listuser', User::class . ':listuser');
     $group->get('/cadastro', User::class . ':cadastro');
     $group->get('/alterar/{id}', User::class . ':alterar');
     $group->post('/insert', User::class . ':insert');
     $group->post('/update', User::class . ':update');
 });
-
-$app->group('/login', function (RouteCollectorProxy $group) {
-    #$group->post('/tema', Home::class . ':tema');
-});
-
-// Endpoints para recuperação de senha
-$app->post('/recuperar-senha', [\app\controller\Login::class, 'recuperarSenha']);
-$app->post('/validar-codigo', [\app\controller\Login::class, 'validarCodigo']);

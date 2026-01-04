@@ -7,59 +7,95 @@ use PHPMailer\PHPMailer\Exception;
 
 class Email
 {
-    private $mail;
-    private $data;
-    private $error;
+    private PHPMailer $mail;
+    private array $data = [];
+    private ?Exception $error = null;
 
     public function __construct()
     {
-        $this->data = [];
         $this->mail = new PHPMailer(true);
         $this->mail->isSMTP();
         $this->mail->isHTML(true);
-        $this->mail->CharSet = PHPMailer::CHARSET_UTF8;
-        $this->mail->Host = CONFIG_SMIP_EMAIL['host'];
+        $this->mail->CharSet = 'UTF-8';
+
+        $this->mail->Host = CONFIG_SMTP_EMAIL['host'];
         $this->mail->SMTPAuth = true;
-        $this->mail->Username = CONFIG_SMIP_EMAIL['user'];
-        $this->mail->Password = CONFIG_SMIP_EMAIL['passwd'];
-        $enc = CONFIG_SMIP_EMAIL['encryption'] ?? 'tls';
-        $this->mail->SMTPSecure = ($enc === 'ssl') ? PHPMailer::ENCRYPTION_SMTPS : PHPMailer::ENCRYPTION_STARTTLS;
-        $this->mail->Port = CONFIG_SMIP_EMAIL['port'];
+        $this->mail->Username = CONFIG_SMTP_EMAIL['user'];
+        $this->mail->Password = CONFIG_SMTP_EMAIL['passwd'];
+
+        $enc = CONFIG_SMTP_EMAIL['encryption'] ?? 'tls';
+        $this->mail->SMTPSecure = $enc === 'ssl'
+            ? PHPMailer::ENCRYPTION_SMTPS
+            : PHPMailer::ENCRYPTION_STARTTLS;
+
+        $this->mail->Port = CONFIG_SMTP_EMAIL['port'];
     }
-    public function add(string $subject, string $body, string $recipient_name, string $recipient_email): self
-    {
-        $this->data['subject'] = $subject;
-        $this->data['body'] = $body;
-        $this->data['recipient_name'] = $recipient_name;
-        $this->data['recipient_email'] = $recipient_email;
+
+    public function add(
+        string $subject,
+        string $body,
+        string $recipient_name,
+        string $recipient_email
+    ): self {
+        if (!$subject || !$body) {
+            throw new \InvalidArgumentException('Assunto e corpo são obrigatórios');
+        }
+
+        if (!filter_var($recipient_email, FILTER_VALIDATE_EMAIL)) {
+            throw new \InvalidArgumentException('E-mail inválido');
+        }
+
+        $this->data = compact(
+            'subject',
+            'body',
+            'recipient_name',
+            'recipient_email'
+        );
+
         return $this;
     }
+
     public function attach(string $filePath, string $fileName): self
     {
         $this->data['attach'][$filePath] = $fileName;
         return $this;
     }
-    public function send(string $from_name = CONFIG_SMIP_EMAIL['from_name'], string $from_email = CONFIG_SMIP_EMAIL['from_email']): bool
-    {
+
+    public function send(
+        string $from_name = CONFIG_SMTP_EMAIL['from_name'],
+        string $from_email = CONFIG_SMTP_EMAIL['from_email']
+    ): bool {
         try {
             $this->mail->setFrom($from_email, $from_name);
-            $this->mail->addAddress($this->data['recipient_email'], $this->data['recipient_name']);
+            $this->mail->addAddress(
+                $this->data['recipient_email'],
+                $this->data['recipient_name']
+            );
+
             $this->mail->Subject = $this->data['subject'];
             $this->mail->Body = $this->data['body'];
+
             if (!empty($this->data['attach'])) {
-                foreach ($this->data['attach'] as $Path => $Name) {
-                    $this->mail->addAttachment($Path, $Name);
+                foreach ($this->data['attach'] as $path => $name) {
+                    $this->mail->addAttachment($path, $name);
                 }
             }
-            $this->mail->send();
-            return true;
+
+            return $this->mail->send();
         } catch (Exception $e) {
             $this->error = $e;
+            error_log('[EMAIL] ' . $e->getMessage());
             return false;
         }
     }
+
     public function error(): ?Exception
     {
         return $this->error;
+    }
+
+    public function errorMessage(): ?string
+    {
+        return $this->error?->getMessage();
     }
 }

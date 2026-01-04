@@ -170,6 +170,10 @@ class Login extends Base
     {
         try {
             $form = $request->getParsedBody();
+            if (empty($form)) {
+                $json = json_decode((string)$request->getBody(), true);
+                $form = $json ?? [];
+            }
             $email = $form['email'] ?? '';
             if (empty($email)) {
                 return $this->SendJson($response, ['success' => false, 'message' => 'Email não informado'], 400);
@@ -183,7 +187,8 @@ class Login extends Base
             }
 
             $codigo = strval(rand(100000, 999999));
-            UpdateQuery::table('usuario')->set(['codigo_verificacao' => $codigo])->where('id', '=', $user['id'])->update();
+            $now = date('Y-m-d H:i:s');
+            UpdateQuery::table('usuario')->set(['codigo_verificacao' => $codigo, 'codigo_gerado_em' => $now])->where('id', '=', $user['id'])->update();
 
             $body = "Olá {$user['nome']},<br><br>Utilize o código a seguir para redefinir sua senha: <strong>{$codigo}</strong><br><br>Se você não solicitou, ignore este e-mail.";
 
@@ -206,6 +211,10 @@ class Login extends Base
     {
         try {
             $form = $request->getParsedBody();
+            if (empty($form)) {
+                $json = json_decode((string)$request->getBody(), true);
+                $form = $json ?? [];
+            }
             $codigo = $form['codigo'] ?? '';
             $senha = $form['senha'] ?? '';
 
@@ -219,7 +228,17 @@ class Login extends Base
                 return $this->SendJson($response, ['success' => false, 'message' => 'Código inválido'], 403);
             }
 
-            UpdateQuery::table('usuario')->set(['senha' => password_hash($senha, PASSWORD_DEFAULT), 'codigo_verificacao' => null])->where('id', '=', $user['id'])->update();
+            // Verifica expiração (15 minutos)
+            $generated = $user['codigo_gerado_em'] ?? null;
+            if ($generated && (strtotime($generated) + 15 * 60) < time()) {
+                return $this->SendJson($response, ['success' => false, 'message' => 'Código expirado'], 403);
+            }
+
+            UpdateQuery::table('usuario')->set([
+                'senha' => password_hash($senha, PASSWORD_DEFAULT),
+                'codigo_verificacao' => null,
+                'codigo_gerado_em' => null
+            ])->where('id', '=', $user['id'])->update();
 
             return $this->SendJson($response, ['success' => true, 'message' => 'Senha atualizada com sucesso']);
         } catch (\Exception $e) {

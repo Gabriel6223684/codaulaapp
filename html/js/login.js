@@ -5,6 +5,7 @@ document.getElementById('buttaoPrecadastro').addEventListener('click', function 
 
     fetch('/login/precadastro', {
         method: 'POST',
+        credentials: 'same-origin',
         body: formData
     })
         .then(res => res.json())
@@ -28,7 +29,7 @@ document.getElementById('buttaoPrecadastro').addEventListener('click', function 
 
 
 // Código para o formulário de login
-document.getElementById('formlogin').addEventListener('submit', function(e) {
+document.getElementById('formlogin').addEventListener('submit', function (e) {
     e.preventDefault(); // evita recarregar a página
 
     const form = e.target;
@@ -36,21 +37,22 @@ document.getElementById('formlogin').addEventListener('submit', function(e) {
 
     fetch('/login', { // rota do seu backend para login
         method: 'POST',
+        credentials: 'same-origin',
         body: formData
     })
-    .then(res => res.json())
-    .then(data => {
-        if (data.status) {
-            // login bem-sucedido
-            alert('Login realizado com sucesso!');
-            form.reset();
-            window.location.href = '/home'; // ou a rota da dashboard
-        } else {
-            // login falhou
-            alert('Erro: ' + data.msg);
-        }
-    })
-    .catch(err => console.error('Erro na requisição:', err));
+        .then(res => res.json())
+        .then(data => {
+            if (data.status) {
+                // login bem-sucedido
+                alert('Login realizado com sucesso!');
+                form.reset();
+                window.location.href = '/home'; // ou a rota da dashboard
+            } else {
+                // login falhou
+                alert('Erro: ' + data.msg);
+            }
+        })
+        .catch(err => console.error('Erro na requisição:', err));
 });
 
 
