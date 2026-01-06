@@ -1,58 +1,91 @@
-// Código para o formulário de pré-cadastro
-document.getElementById('buttaoPrecadastro').addEventListener('click', function () {
-    const form = document.getElementById('precadastro');
-    const formData = new FormData(form);
+document.getElementById("formlogin").addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-    fetch('/login/precadastro', {
-        method: 'POST',
-        credentials: 'same-origin',
-        body: formData
-    })
-        .then(res => res.json())
-        .then(data => {
-            if (data.status) {
-                alert('Cadastro realizado e você já está logado!');
-                // fechar modal
-                const modal = bootstrap.Modal.getInstance(document.getElementById('modalPreCadastro'));
-                modal.hide();
-                form.reset();
-                // redirecionar para página principal (dashboard)
-                window.location.href = '/home'; // ou a rota que seu site usa
-            } else {
-                alert('Erro: ' + data.msg);
-            }
-        })
+    const form = new FormData(e.target);
 
-        .catch(err => console.error('Erro na requisição:', err));
+    const res = await fetch("/login", {
+        method: "POST",
+        body: form
+    });
+
+    // Tratamento específico para 401
+    if (res.status === 401) {
+        const txt = await res.text();
+        console.error('Resposta 401 do servidor:', txt || res.status);
+        alert('Não autorizado (401). Verifique as credenciais ou logs do servidor.');
+        return;
+    }
+
+    let json;
+    try {
+        const ct = res.headers.get('content-type') || '';
+        if (ct.indexOf('application/json') !== -1) {
+            json = await res.json();
+        } else {
+            const txt = await res.text();
+            throw new Error('Resposta inválida do servidor: ' + (txt || `status ${res.status}`));
+        }
+    } catch (err) {
+        alert('Erro ao processar resposta do servidor: ' + err.message);
+        return;
+    }
+
+    if (json.status) {
+        window.location.href = "/dashboard";
+    } else {
+        alert(json.msg || json.message || 'Erro no login');
+    }
 });
 
+document.getElementById("buttaoPrecadastro").addEventListener("click", async () => {
+    const nome = document.getElementById("nome").value;
+    const email = document.getElementById("email").value;
+    const telefone = document.getElementById("telefone").value;
+    const whatsapp = document.getElementById("whatsapp").value;
+    const senha = document.getElementById("senha").value;
 
-
-// Código para o formulário de login
-document.getElementById('formlogin').addEventListener('submit', function (e) {
-    e.preventDefault(); // evita recarregar a página
-
-    const form = e.target;
-    const formData = new FormData(form);
-
-    fetch('/login', { // rota do seu backend para login
-        method: 'POST',
-        credentials: 'same-origin',
-        body: formData
-    })
-        .then(res => res.json())
-        .then(data => {
-            if (data.status) {
-                // login bem-sucedido
-                alert('Login realizado com sucesso!');
-                form.reset();
-                window.location.href = '/home'; // ou a rota da dashboard
-            } else {
-                // login falhou
-                alert('Erro: ' + data.msg);
-            }
+    const response = await fetch("/login/precadastro", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            nome,
+            email,
+            telefone,
+            whatsapp,
+            senhaCadastro: senha
         })
-        .catch(err => console.error('Erro na requisição:', err));
+    });
+
+    // Tratamento específico para 401
+    if (response.status === 401) {
+        const txt = await response.text();
+        console.error('Resposta 401 do servidor (precadastro):', txt || response.status);
+        alert('Não autorizado (401). Verifique configurações do servidor e tente novamente.');
+        return;
+    }
+
+    let data;
+    try {
+        const ct = response.headers.get('content-type') || '';
+        if (ct.indexOf('application/json') !== -1) {
+            data = await response.json();
+        } else {
+            const txt = await response.text();
+            throw new Error('Resposta inválida do servidor: ' + (txt || `status ${response.status}`));
+        }
+    } catch (err) {
+        alert('Erro ao processar resposta do servidor: ' + err.message);
+        return;
+    }
+
+    if (data.status) {
+        alert(data.msg || "Cadastro realizado com sucesso!");
+        const modalEl = document.getElementById('modalPreCadastro');
+        const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+        modal.hide();
+    } else {
+        alert(data.msg || "Erro no cadastro");
+    }
 });
-
-

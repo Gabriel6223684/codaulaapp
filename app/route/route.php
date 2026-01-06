@@ -18,6 +18,9 @@ $app->group('/login', function (RouteCollectorProxy $group) {
     $group->post('/validar-codigo', Login::class . ':validarCodigo');
 });
 
+// Health check / debug endpoint
+$app->get('/ping', Login::class . ':ping');
+
 // Usuário
 $app->group('/usuario', function (RouteCollectorProxy $group) {
     $group->get('/listuser', User::class . ':listuser');

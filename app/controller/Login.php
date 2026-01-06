@@ -22,148 +22,151 @@ class Login extends Base
         }
     }
 
+    // Health check endpoint to test server responses
+    public function ping($request, $response)
+    {
+        try {
+            $server = [
+                'php_sapi' => PHP_SAPI,
+                'time' => date('c')
+            ];
+            return $this->SendJson($response, ['status' => true, 'msg' => 'pong', 'server' => $server]);
+        } catch (\Exception $e) {
+            return $this->SendJson($response, ['status' => false, 'msg' => $e->getMessage()], 500);
+        }
+    }
+
     // Pré-cadastro de usuários
     public function precadastro($request, $response)
     {
         try {
             $form = $request->getParsedBody();
+            // Fallback para quando o body vem como JSON (por exemplo fetch com application/json)
+            if (empty($form)) {
+                $json = json_decode((string)$request->getBody(), true);
+                $form = $json ?? [];
+            }
 
-            // Dados do usuário
-            $dadosUsuario = [
-                'nome' => $form['nome'] ?? '',
-                'ativo' => true,
-                'senha' => password_hash($form['senhaCadastro'], PASSWORD_DEFAULT)
-            ];
+            // Log para depuração (não exponha em produção)
+            $remoteIp = $request->getServerParams()['REMOTE_ADDR'] ?? 'unknown';
+            $ct = $request->getHeaderLine('Content-Type');
+            $logBody = $form;
+            if (isset($logBody['senhaCadastro'])) $logBody['senhaCadastro'] = '***';
+            error_log("[LOGIN][precadastro] IP: $remoteIp CT: $ct BODY: " . json_encode($logBody));
 
-            $isInserted = InsertQuery::table('usuario')->save($dadosUsuario);
-
-            if (!$isInserted) {
+            if (empty($form['nome']) || empty($form['email']) || empty($form['senhaCadastro'])) {
                 return $this->SendJson($response, [
                     'status' => false,
-                    'msg' => 'Erro ao cadastrar usuário',
-                    'id' => 0
-                ], 403);
+                    'msg' => 'Preencha todos os campos'
+                ], 400);
             }
 
-            // Último usuário cadastrado
-            $idUsuario = SelectQuery::select('id')
+            $existe = SelectQuery::select('id')
                 ->from('usuario')
-                ->order('id', 'desc')
-                ->fetch()['id'];
-
-            // Inserir contatos
-            $contatos = [
-                ['tipo' => 'email', 'contato' => $form['email'] ?? ''],
-                ['tipo' => 'celular', 'contato' => $form['celular'] ?? ''],
-                ['tipo' => 'whatsapp', 'contato' => $form['whatsapp'] ?? '']
-            ];
-
-            foreach ($contatos as $contato) {
-                $contato['id_usuario'] = $idUsuario;
-                InsertQuery::table('contato')->save($contato);
-            }
-
-            // Buscar dados completos do usuário para criar sessão
-            $user = SelectQuery::select()
-                ->from('vw_usuario_contatos')
-                ->where('id', '=', $idUsuario)
+                ->where('email', '=', $form['email'])
                 ->fetch();
 
-            // Criar sessão para o usuário recém-cadastrado
-            if ($user) {
-                $_SESSION['usuario'] = [
-                    'id' => $user['id'],
-                    'nome' => $user['nome'],
-                    'ativo' => $user['ativo'] ?? true,
-                    'logado' => true,
-                    'administrador' => $user['administrador'] ?? false,
-                    'celular' => $user['celular'] ?? '',
-                    'email' => $user['email'] ?? '',
-                    'whatsapp' => $user['whatsapp'] ?? '',
-                    'data_cadastro' => $user['data_cadastro'] ?? null,
-                    'data_alteracao' => $user['data_alteracao'] ?? null,
-                ];
+            if ($existe) {
+                return $this->SendJson($response, [
+                    'status' => false,
+                    'msg' => 'E-mail já cadastrado'
+                ], 409);
             }
+
+            InsertQuery::table('usuario')->save([
+                'nome' => $form['nome'],
+                'email' => $form['email'],
+                'senha' => password_hash($form['senhaCadastro'], PASSWORD_DEFAULT),
+                'ativo' => true
+            ]);
 
             return $this->SendJson($response, [
                 'status' => true,
-                'msg' => 'Cadastro realizado com sucesso!',
-                'id' => $idUsuario
+                'msg' => 'Cadastro realizado com sucesso'
             ], 201);
         } catch (\Exception $e) {
             return $this->SendJson($response, [
                 'status' => false,
-                'msg' => 'Erro: ' . $e->getMessage(),
-                'id' => 0
+                'msg' => $e->getMessage()
             ], 500);
         }
+        return $response
+            ->withHeader('Content-Type', 'application/json')
+            ->withStatus(200);
     }
+
 
     // Autenticação de login
     public function autenticar($request, $response)
     {
         try {
             $form = $request->getParsedBody();
-
-            if (empty($form['login'])) {
-                return $this->SendJson($response, ['status' => false, 'msg' => 'Informe o login', 'id' => 0], 403);
+            if (empty($form)) {
+                $json = json_decode((string)$request->getBody(), true);
+                $form = $json ?? [];
             }
 
-            if (empty($form['senha'])) {
-                return $this->SendJson($response, ['status' => false, 'msg' => 'Informe a senha', 'id' => 0], 403);
+            // Log para depuração (não exponha em produção)
+            $remoteIp = $request->getServerParams()['REMOTE_ADDR'] ?? 'unknown';
+            $ct = $request->getHeaderLine('Content-Type');
+            $logBody = $form;
+            if (isset($logBody['senha'])) $logBody['senha'] = '***';
+            error_log("[LOGIN][autenticar] IP: $remoteIp CT: $ct BODY: " . json_encode($logBody));
+
+            if (empty($form['login']) || empty($form['senha'])) {
+                return $this->SendJson($response, [
+                    'status' => false,
+                    'msg' => 'Informe login e senha'
+                ], 400);
             }
 
-            // Buscar usuário pelo login (cpf, email, celular ou whatsapp)
             $user = SelectQuery::select()
-                ->from('vw_usuario_contatos')
-                ->where('email', '=', $form['login'], 'or')
-                ->where('celular', '=', $form['login'], 'or')
-                ->where('whatsapp', '=', $form['login'])
+                ->from('usuario')
+                ->where('email', '=', $form['login'])
                 ->fetch();
 
             if (!$user) {
-                return $this->SendJson($response, ['status' => false, 'msg' => 'Usuário ou senha inválidos!', 'id' => 0], 403);
-            }
-
-            if (!$user['ativo']) {
-                return $this->SendJson($response, ['status' => false, 'msg' => 'Acesso não permitido ainda!', 'id' => 0], 403);
+                return $this->SendJson($response, [
+                    'status' => false,
+                    'msg' => 'Usuário ou senha inválidos'
+                ], 403);
             }
 
             if (!password_verify($form['senha'], $user['senha'])) {
-                return $this->SendJson($response, ['status' => false, 'msg' => 'Usuário ou senha inválidos!', 'id' => 0], 403);
+                return $this->SendJson($response, [
+                    'status' => false,
+                    'msg' => 'Usuário ou senha inválidos'
+                ], 403);
             }
 
-            // Rehash da senha se necessário
-            if (password_needs_rehash($user['senha'], PASSWORD_DEFAULT)) {
-                UpdateQuery::table('usuario')
-                    ->set(['senha' => password_hash($form['senha'], PASSWORD_DEFAULT)])
-                    ->where('id', '=', $user['id'])
-                    ->update();
+            if (!$user['ativo']) {
+                return $this->SendJson($response, [
+                    'status' => false,
+                    'msg' => 'Usuário inativo'
+                ], 403);
             }
 
-            // Criar sessão
             $_SESSION['usuario'] = [
                 'id' => $user['id'],
                 'nome' => $user['nome'],
-                'ativo' => $user['ativo'],
-                'logado' => true,
-                'administrador' => $user['administrador'],
-                'celular' => $user['celular'],
                 'email' => $user['email'],
-                'whatsapp' => $user['whatsapp'],
-                'data_cadastro' => $user['data_cadastro'],
-                'data_alteracao' => $user['data_alteracao'],
+                'logado' => true,
+                'administrador' => $user['administrador']
             ];
 
             return $this->SendJson($response, [
                 'status' => true,
-                'msg' => 'Seja bem-vindo de volta!',
+                'msg' => 'Login realizado com sucesso',
                 'id' => $user['id']
             ], 200);
         } catch (\Exception $e) {
-            return $this->SendJson($response, ['status' => false, 'msg' => 'Erro: ' . $e->getMessage(), 'id' => 0], 500);
+            return $this->SendJson($response, [
+                'status' => false,
+                'msg' => $e->getMessage()
+            ], 500);
         }
     }
+
 
     // Envia código de verificação para o e-mail informado (se existir)
     public function recuperarSenha($request, $response)
