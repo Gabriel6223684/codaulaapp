@@ -151,7 +151,8 @@ class Login extends Base
                 'nome' => $user['nome'],
                 'email' => $user['email'],
                 'logado' => true,
-                'administrador' => $user['administrador']
+                'ativo' => !empty($user['ativo']) ? (bool)$user['ativo'] : true,
+                'administrador' => isset($user['administrador']) ? (bool)$user['administrador'] : false
             ];
 
             return $this->SendJson($response, [

@@ -58,6 +58,8 @@
             </div>
             <div class="card-body login-card-body">
                 <p class="login-box-msg">Dados com * são obrigatórios</p>
+                <div id="loginError" class="alert alert-danger d-none" role="alert" style="word-break:break-word;">
+                </div>
                 <!-- FORMULÁRIO DE LOGIN -->
                 <form id="formlogin" action="/login" method="post">
                     <div class="input-group mb-2">
@@ -127,6 +129,8 @@
                 </div>
 
                 <div class="modal-body">
+
+                    <div id="precadastroAlert" class="alert d-none" role="alert" style="word-break:break-word;"></div>
 
                     <form id="precadastro">
 

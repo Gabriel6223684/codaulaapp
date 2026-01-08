@@ -1,18 +1,54 @@
+// Helpers para exibir mensagens inline (evita uso de alert que interrompe o fluxo)
+function showLoginError(msg) {
+    const el = document.getElementById('loginError');
+    if (!el) { console.error('loginError element not found:', msg); return; }
+    el.textContent = msg;
+    el.classList.remove('d-none', 'alert-success', 'alert-danger');
+    el.classList.add('alert-danger');
+}
+function showLoginSuccess(msg) {
+    const el = document.getElementById('loginError');
+    if (!el) { return; }
+    el.textContent = msg;
+    el.classList.remove('d-none', 'alert-danger');
+    el.classList.add('alert-success');
+}
+function clearLoginError() {
+    const el = document.getElementById('loginError');
+    if (el) { el.classList.add('d-none'); el.textContent = ''; }
+}
+
+function showPrecadastroAlert(msg, success) {
+    const el = document.getElementById('precadastroAlert');
+    if (!el) { console.error('precadastroAlert not found:', msg); return; }
+    el.textContent = msg;
+    el.classList.remove('d-none', 'alert-success', 'alert-danger');
+    el.classList.add(success ? 'alert-success' : 'alert-danger');
+}
+
+// Formulário de login
 document.getElementById("formlogin").addEventListener("submit", async (e) => {
     e.preventDefault();
+    clearLoginError();
 
     const form = new FormData(e.target);
 
-    const res = await fetch("/login", {
-        method: "POST",
-        body: form
-    });
+    let res;
+    try {
+        res = await fetch("/login", {
+            method: "POST",
+            body: form,
+            redirect: 'follow'
+        });
+    } catch (err) {
+        showLoginError('Erro de rede: ' + err.message);
+        return;
+    }
 
-    // Tratamento específico para 401
     if (res.status === 401) {
         const txt = await res.text();
         console.error('Resposta 401 do servidor:', txt || res.status);
-        alert('Não autorizado (401). Verifique as credenciais ou logs do servidor.');
+        showLoginError('Não autorizado (401). Verifique as credenciais.');
         return;
     }
 
@@ -23,20 +59,29 @@ document.getElementById("formlogin").addEventListener("submit", async (e) => {
             json = await res.json();
         } else {
             const txt = await res.text();
-            throw new Error('Resposta inválida do servidor: ' + (txt || `status ${res.status}`));
+            // Se o servidor retornou HTML (por ex. foi redirecionado para o login), mostramos uma mensagem amigável
+            if (res.redirected || /<html|doctype/i.test(txt)) {
+                showLoginError('Resposta inesperada: servidor retornou HTML. Verifique os logs do servidor.');
+            } else {
+                showLoginError('Resposta inválida do servidor: ' + (txt || `status ${res.status}`));
+            }
+            return;
         }
     } catch (err) {
-        alert('Erro ao processar resposta do servidor: ' + err.message);
+        showLoginError('Erro ao processar resposta do servidor: ' + err.message);
         return;
     }
 
     if (json.status) {
+        // Mostrar mensagem de sucesso e redirecionar
+        showLoginSuccess(json.msg || 'Login realizado com sucesso');
         window.location.href = "/dashboard";
     } else {
-        alert(json.msg || json.message || 'Erro no login');
+        showLoginError(json.msg || json.message || 'Usuário ou senha inválidos');
     }
 });
 
+// Pré-cadastro
 document.getElementById("buttaoPrecadastro").addEventListener("click", async () => {
     const nome = document.getElementById("nome").value;
     const email = document.getElementById("email").value;
@@ -44,25 +89,34 @@ document.getElementById("buttaoPrecadastro").addEventListener("click", async () 
     const whatsapp = document.getElementById("whatsapp").value;
     const senha = document.getElementById("senha").value;
 
-    const response = await fetch("/login/precadastro", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            nome,
-            email,
-            telefone,
-            whatsapp,
-            senhaCadastro: senha
-        })
-    });
+    // Limpa alert
+    showPrecadastroAlert('', true);
 
-    // Tratamento específico para 401
+    let response;
+    try {
+        response = await fetch("/login/precadastro", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                nome,
+                email,
+                telefone,
+                whatsapp,
+                senhaCadastro: senha
+            }),
+            redirect: 'follow'
+        });
+    } catch (err) {
+        showPrecadastroAlert('Erro de rede: ' + err.message, false);
+        return;
+    }
+
     if (response.status === 401) {
         const txt = await response.text();
         console.error('Resposta 401 do servidor (precadastro):', txt || response.status);
-        alert('Não autorizado (401). Verifique configurações do servidor e tente novamente.');
+        showPrecadastroAlert('Não autorizado (401). Verifique configurações do servidor e tente novamente.', false);
         return;
     }
 
@@ -73,19 +127,23 @@ document.getElementById("buttaoPrecadastro").addEventListener("click", async () 
             data = await response.json();
         } else {
             const txt = await response.text();
-            throw new Error('Resposta inválida do servidor: ' + (txt || `status ${response.status}`));
+            showPrecadastroAlert('Resposta inválida do servidor: ' + (txt || `status ${response.status}`), false);
+            return;
         }
     } catch (err) {
-        alert('Erro ao processar resposta do servidor: ' + err.message);
+        showPrecadastroAlert('Erro ao processar resposta do servidor: ' + err.message, false);
         return;
     }
 
     if (data.status) {
-        alert(data.msg || "Cadastro realizado com sucesso!");
+        showPrecadastroAlert(data.msg || "Cadastro realizado com sucesso!", true);
         const modalEl = document.getElementById('modalPreCadastro');
         const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-        modal.hide();
+        // Esconde o modal após uma pequena pausa para o usuário ver a mensagem
+        setTimeout(() => modal.hide(), 800);
+        // limpa campos
+        document.getElementById('precadastro').reset();
     } else {
-        alert(data.msg || "Erro no cadastro");
+        showPrecadastroAlert(data.msg || "Erro no cadastro", false);
     }
 });
