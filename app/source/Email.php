@@ -65,6 +65,37 @@ class Email
         string $from_name = CONFIG_SMTP_EMAIL['from_name'],
         string $from_email = CONFIG_SMTP_EMAIL['from_email']
     ): bool {
+        // Se SENDGRID_API_KEY estiver configurado, usa API do SendGrid
+        $sendgridKey = getenv('SENDGRID_API_KEY');
+        if ($sendgridKey) {
+            $payload = [
+                'personalizations' => [[
+                    'to' => [['email' => $this->data['recipient_email'], 'name' => $this->data['recipient_name']]],
+                    'subject' => $this->data['subject']
+                ]],
+                'from' => ['email' => $from_email, 'name' => $from_name],
+                'content' => [['type' => 'text/html', 'value' => $this->data['body']]]
+            ];
+
+            $opts = [
+                'http' => [
+                    'method' => 'POST',
+                    'header' => "Authorization: Bearer {$sendgridKey}\r\nContent-Type: application/json\r\n",
+                    'content' => json_encode($payload),
+                    'timeout' => 10
+                ]
+            ];
+
+            $result = @file_get_contents('https://api.sendgrid.com/v3/mail/send', false, stream_context_create($opts));
+            if ($result === false) {
+                error_log('[EMAIL][SENDGRID] Falha no envio (fallback para SMTP)');
+                // cai para SMTP abaixo
+            } else {
+                return true;
+            }
+        }
+
+        // Fallback: SMTP via PHPMailer (configurado por CONFIG_SMTP_EMAIL)
         try {
             $this->mail->setFrom($from_email, $from_name);
             $this->mail->addAddress(

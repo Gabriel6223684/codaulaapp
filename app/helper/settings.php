@@ -14,7 +14,7 @@ define('DIR_VIEW', ROOT . '/app/view');
 define('HOME', (isset($_SERVER['HTTP_CF_VISITOR']) ? $_SERVER['HTTP_CF_VISITOR'] : 'http') . '://' . $_SERVER['HTTP_HOST']);
 
 // Configuração de SMTP utilizada pela classe Email
-define('CONFIG_SMIP_EMAIL', [
+define('CONFIG_SMTP_EMAIL', [
     'host' => 'smtp.titan.email',
     'port' => 587,
     'user' => 'noreplay@mkt.fanorte.edu.br',

@@ -14,6 +14,8 @@ $app->group('/login', function (RouteCollectorProxy $group) {
     $group->get('', Login::class . ':login');
     $group->post('', Login::class . ':autenticar');
     $group->post('/precadastro', Login::class . ':precadastro');
+    $group->post('/enviar-codigo-contato', Login::class . ':enviarCodigoContato');
+    $group->post('/confirmar-codigo-contato', Login::class . ':confirmarCodigoContato');
     $group->post('/recuperar-senha', Login::class . ':recuperarSenha');
     $group->post('/validar-codigo', Login::class . ':validarCodigo');
 });
