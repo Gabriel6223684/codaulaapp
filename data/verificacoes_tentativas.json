@@ -1,2 +1,6 @@
+<<<<<<< HEAD
 
 [{"tipo":"celular","contato":"5511999999999","sucesso":true,"criado_em":"2026-01-09 13:27:59"},{"tipo":"email","contato":"test@example.com","sucesso":true,"criado_em":"2026-01-09 13:32:07"}]
+=======
+[{"tipo":"celular","contato":"5511999999999","sucesso":true,"criado_em":"2026-01-09 13:27:59"},{"tipo":"email","contato":"test@example.com","sucesso":true,"criado_em":"2026-01-09 13:32:07"}]
+>>>>>>> 8aded88d298a548d561d72516e794fe63515a8fb
