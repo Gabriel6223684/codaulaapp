@@ -1,26 +1,33 @@
 <?php
 
+use Slim\Routing\RouteCollectorProxy;
+use app\middleware\AuthMiddleware;
 use app\controller\Home;
 use app\controller\Login;
-use Slim\Routing\RouteCollectorProxy;
+use app\controller\User;
 
-$app->get('/', Home::class . ':home');
-$app->get('/home', Home::class . ':home');
-$app->get('/login', Login::class . ':login');
-$app->post('/login/precadastro', [\app\controller\Login::class, 'precadastro']);
+$authMiddleware = new AuthMiddleware();
 
-$app->get('/listuser', [\app\controller\User::class, 'listuser']);
-
-$app->group('/usuario', function (RouteCollectorProxy $group) {
-    #$group->post('/tema', Home::class . ':tema');
-    $group->get('/listuser', [\app\controller\User::class, 'listuser']);
-    $group->get('/cadastro', User::class . ':cadastro');
-    $group->get('/alterar/{id}', User::class . ':alterar');
-    $group->post('/insert', User::class . ':insert');
-    $group->post('/update', User::class . ':update');
-});
-
+// Rotas públicas
 $app->group('/login', function (RouteCollectorProxy $group) {
-    #$group->post('/tema', Home::class . ':tema');
+    $group->get('', Login::class . ':login');
+    $group->post('', Login::class . ':autenticar');
+    $group->post('/precadastro', Login::class . ':precadastro');
+    $group->post('/recuperar-senha', Login::class . ':recuperarSenha');
 });
 
+$app->get('/ping', Login::class . ':ping');
+
+// Rotas protegidas
+$app->group('', function (RouteCollectorProxy $group) {
+    $group->get('/', Home::class . ':home');
+    $group->get('/home', Home::class . ':home');
+
+    $group->group('/usuario', function ($group) {
+        $group->get('/listuser', User::class . ':listuser');
+        $group->get('/cadastro', User::class . ':cadastro');
+        $group->get('/alterar/{id}', User::class . ':alterar');
+        $group->post('/insert', User::class . ':insert');
+        $group->post('/update', User::class . ':update');
+    });
+})->add($authMiddleware); // <-- middleware aplicado ao grupo protegido

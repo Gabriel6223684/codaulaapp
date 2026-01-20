@@ -58,8 +58,10 @@
             </div>
             <div class="card-body login-card-body">
                 <p class="login-box-msg">Dados com * são obrigatórios</p>
+                <div id="loginError" class="alert alert-danger d-none" role="alert" style="word-break:break-word;">
+                </div>
                 <!-- FORMULÁRIO DE LOGIN -->
-                <form id="formlogin" action="/login/precadastro" method="post">
+                <form id="formlogin" method="post">
                     <div class="input-group mb-2">
                         <div class="form-floating">
                             <input id="loginEmail" name="login" type="text" class="form-control"
@@ -91,7 +93,7 @@
                         </div>
 
                         <div class="col-4">
-                            <button type="submit" id="prelogin" class="btn btn-primary w-100">Entrar</button>
+                            <button type="button" id="prelogin" class="btn btn-primary w-100">Entrar</button>
                         </div>
                     </div>
                 </form>
@@ -99,7 +101,8 @@
                 <div class="social-auth-links text-center mt-3">
                     <p>- OU -</p>
 
-                    <button type="button" class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#modalPreCadastro">
+                    <button type="button" class="btn btn-primary w-100" data-bs-toggle="modal"
+                        data-bs-target="#modalPreCadastro">
                         <i class="bi bi-person-add"></i> Pré-cadastro
                     </button>
 
@@ -127,11 +130,18 @@
 
                 <div class="modal-body">
 
+                    <div id="precadastroAlert" class="alert d-none" role="alert" style="word-break:break-word;"></div>
+
                     <form id="precadastro">
 
                         <div class="mb-3">
                             <label class="form-label">Nome *</label>
-                            <input type="text" class="form-control" id="email" name="nome" required>
+                            <input type="text" class="form-control" id="nome" name="nome" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">CPF *</label>
+                            <input type="text" class="form-control" id="cpf" name="cpf" required>
                         </div>
 
                         <div class="mb-3">
@@ -141,7 +151,7 @@
 
                         <div class="mb-3">
                             <label class="form-label">Telefone *</label>
-                            <input type="text" class="form-control" id="telefone" name="telefone" required>
+                            <input type="text" class="form-control" id="telefone" name="celular" required>
                         </div>
 
                         <div class="mb-3">
@@ -215,9 +225,7 @@
 
     <script src="/js/login.js"></script>
     <script src="/js/adminlte.js"></script>
-    <script src="/js/login-controller.js"></script>
     <script src="/js/recuperasenha.js"></script>
-    <script src="/js/Node.js"></script>
 
 </body>
 
