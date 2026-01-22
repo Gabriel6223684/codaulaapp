@@ -4,6 +4,8 @@ namespace app\database\builder;
 
 use app\database\Connection;
 
+require_once __DIR__ . '/Connection.php';
+
 class InsertQuery
 {
     private string $table;
