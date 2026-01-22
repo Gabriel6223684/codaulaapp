@@ -2,17 +2,22 @@
 
 namespace app\controller;
 
+use app\trait\Template;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+
 class Home extends Base
 {
-    public function home($request, $response)
+    use Template;
+
+    public function home(ServerRequestInterface $request, ResponseInterface $response, $args): ResponseInterface
     {
+        $twig = $this->getTwig();
         $dadosTemplate = [
-            'titulo' => 'Página inicial'
+            'titulo' => 'Dashboard',
+            'usuario' => $_SESSION['usuario'] ?? null
         ];
-        return $this->getTwig()
-            ->render($response, 'home.html', $dadosTemplate)
-            ->withHeader('Content-Type', 'text/html')
-            ->withStatus(200);
+
+        return $twig->render($response, 'dashboard.html', $dadosTemplate);
     }
 }
-

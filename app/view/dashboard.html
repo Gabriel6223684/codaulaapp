@@ -1,0 +1,45 @@
+{% extends "main.html" %}
+
+{% block main %}
+<div class="app-content-header">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-6">
+                <h3 class="mb-0">Dashboard - Bem-vindo, {{ usuario.nome }}! 👋</h3>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-end">
+                    <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="alert alert-success" role="alert">
+            ✅ Você está conectado como <strong>{{ usuario.email }}</strong>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Informações do Usuário</h3>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Nome:</strong> {{ usuario.nome }}</p>
+                        <p><strong>Email:</strong> {{ usuario.email }}</p>
+                        <p><strong>ID:</strong> {{ usuario.id }}</p>
+                        {% if usuario.administrador %}
+                        <p><span class="badge bg-danger">Administrador</span></p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

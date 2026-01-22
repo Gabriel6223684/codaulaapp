@@ -2,36 +2,65 @@
 
 namespace app\middleware;
 
+use Slim\Psr7\Response;
+use Slim\Psr7\Headers;
+
 class Middleware
 {
     public static function authentication()
     {
-        #Retorna um closure (função anônima)
-        $middleware = function ($request, $handler) {
-            #Capturamos o metodo de requisição (GET, POST, PUT, DELETE, ETC).
-            $method = $request->getMethod();
-            #Capturamos a página que o usuário está tentando acessar (path).
-            $pagina = $request->getUri()->getPath();
-            if ($method === 'GET') {
-                #Verificando se o usuário está autenticado, caso não esteja já direcionamos para o login.
-                $usuarioLogado = empty($_SESSION['usuario']) || empty($_SESSION['usuario']['logado']);
-                if ($usuarioLogado && $pagina !== '/login') {
-                    session_destroy();
-                    $response = new \Slim\Psr7\Response();
-                    return $response->withHeader('Location', '/login')->withStatus(302);
-                }
-                if ($pagina === '/login' && !$usuarioLogado) {
-                    $response = new \Slim\Psr7\Response();
-                    return $response->withHeader('Location', '/')->withStatus(302);
-                }
-                if (!empty($_SESSION['usuario']) && (empty($_SESSION['usuario']['ativo']) || !$_SESSION['usuario']['ativo'])) {
-                    session_destroy();
-                    $response = new \Slim\Psr7\Response();
-                    return $response->withHeader('Location', '/login')->withStatus(302);
+        return function ($request, $handler) {
+
+            if (session_status() !== PHP_SESSION_ACTIVE) {
+                session_start();
+            }
+
+            $path = rtrim($request->getUri()->getPath(), '/');
+            if ($path === '') {
+                $path = '/';
+            }
+
+            $logado = !empty($_SESSION['usuario']['logado']);
+            $ativo  = !empty($_SESSION['usuario']['ativo']);
+
+            // 🔁 PRIMEIRO: Logado tentando acessar login (tem prioridade)
+            if ($logado && str_starts_with($path, '/login')) {
+                $headers = new Headers();
+                $headers->addHeader('Location', '/dashboard');
+                return new Response(302, $headers);
+            }
+
+            // Rotas públicas
+            $rotasPublicas = [
+                '/login',
+                '/ping'
+            ];
+
+            $rotaPublica = false;
+            foreach ($rotasPublicas as $rota) {
+                if ($path === $rota || str_starts_with($path, $rota . '/')) {
+                    $rotaPublica = true;
+                    break;
                 }
             }
+
+            // ❌ Não logado tentando acessar rota protegida
+            if (!$logado && !$rotaPublica) {
+                session_destroy();
+                $headers = new Headers();
+                $headers->addHeader('Location', '/login');
+                return new Response(302, $headers);
+            }
+
+            // 🚫 Usuário inativo
+            if ($logado && !$ativo) {
+                session_destroy();
+                $headers = new Headers();
+                $headers->addHeader('Location', '/login');
+                return new Response(302, $headers);
+            }
+
             return $handler->handle($request);
         };
-        return $middleware;
     }
 }

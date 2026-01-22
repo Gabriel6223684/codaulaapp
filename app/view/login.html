@@ -61,7 +61,7 @@
                 <div id="loginError" class="alert alert-danger d-none" role="alert" style="word-break:break-word;">
                 </div>
                 <!-- FORMULÁRIO DE LOGIN -->
-                <form id="formlogin" action="/login" method="post">
+                <form id="formlogin" action="/dashboard" method="post">
                     <div class="input-group mb-2">
                         <div class="form-floating">
                             <input id="loginEmail" name="login" type="text" class="form-control"
@@ -93,7 +93,7 @@
                         </div>
 
                         <div class="col-4">
-                            <button type="submit" id="prelogin" class="btn btn-primary w-100">Entrar</button>
+                            <button type="button" id="prelogin" class="btn btn-primary w-100">Entrar</button>
                         </div>
                     </div>
                 </form>
@@ -145,13 +145,18 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">Telefone *</label>
-                            <input type="text" class="form-control" id="telefone" name="celular" required>
+                            <label class="form-label">CPF</label>
+                            <input type="text" class="form-control" id="cpf" name="cpf">
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label">WhatsApp *</label>
-                            <input type="text" class="form-control" id="whatsapp" name="whatsapp" required>
+                            <label class="form-label">Telefone</label>
+                            <input type="text" class="form-control" id="telefone" name="telefone">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">WhatsApp</label>
+                            <input type="text" class="form-control" id="whatsapp" name="whatsapp">
                         </div>
 
                         <div class="mb-3">
@@ -171,10 +176,6 @@
             </div>
         </div>
     </div>
-
-
-
-
 
     <!-- Modal Recuperar Senha -->
     <div class="modal fade" id="modalRecuperarSenha" tabindex="-1">
@@ -223,5 +224,6 @@
     <script src="/html/js/recuperasenha.js"></script>
 
 </body>
+
 
 </html>

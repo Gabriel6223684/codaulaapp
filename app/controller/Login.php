@@ -6,19 +6,27 @@ use app\database\builder\UpdateQuery;
 use app\database\builder\SelectQuery;
 use app\database\builder\InsertQuery;
 
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use app\trait\Template;
+use PDO;
+
 class Login extends Base
 {
     // Renderiza a página de login
-    public function login($request, $response)
+    public function login(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         try {
-            $dadosTemplate = ['titulo' => 'Autenticação'];
-            return $this->getTwig()
-                ->render($response, $this->setView('login'), $dadosTemplate)
-                ->withHeader('Content-Type', 'text/html')
-                ->withStatus(200);
+            return $this->getTwig()->render(
+                $response,
+                $this->setView('login'),
+                ['titulo' => 'Autenticação']
+            );
         } catch (\Exception $e) {
-            return $this->SendJson($response, ['status' => false, 'msg' => $e->getMessage()], 500);
+            return $this->SendJson($response, [
+                'status' => false,
+                'msg' => 'Erro ao carregar página'
+            ], 500);
         }
     }
 
@@ -41,152 +49,102 @@ class Login extends Base
     {
         try {
             $form = $request->getParsedBody();
-            // Fallback para quando o body vem como JSON (por exemplo fetch com application/json)
+            // Fallback para quando o body vem como JSON
             if (empty($form)) {
-                $json = json_decode((string)$request->getBody(), true);
+                $json = json_decode((string) $request->getBody(), true);
                 $form = $json ?? [];
             }
 
-            // Log para depuração (não exponha em produção)
+            // Log para depuração
             $remoteIp = $request->getServerParams()['REMOTE_ADDR'] ?? 'unknown';
             $ct = $request->getHeaderLine('Content-Type');
-            $logBody = $form;
-            if (isset($logBody['senhaCadastro'])) $logBody['senhaCadastro'] = '***';
-            error_log("[LOGIN][precadastro] IP: $remoteIp CT: $ct BODY: " . json_encode($logBody));
+            error_log("[LOGIN][precadastro] IP: $remoteIp CT: $ct");
 
+            // Validar campos obrigatórios
             if (empty($form['nome']) || empty($form['email']) || empty($form['senhaCadastro'])) {
                 return $this->SendJson($response, [
                     'status' => false,
-                    'msg' => 'Preencha todos os campos'
+                    'msg' => 'Nome, E-mail e Senha são obrigatórios'
                 ], 400);
             }
 
-            $fileFallback = false;
+            // Normalizar dados
+            $nome = trim($form['nome']);
+            $email = strtolower(trim($form['email']));
+            $cpf = preg_replace('/\D+/', '', $form['cpf'] ?? '');
+            $celular = preg_replace('/\D+/', '', $form['telefone'] ?? $form['celular'] ?? '');
+            $senha = $form['senhaCadastro'];
+
+            // Validar email
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                return $this->SendJson($response, [
+                    'status' => false,
+                    'msg' => 'E-mail inválido'
+                ], 400);
+            }
+
             try {
                 $con = \app\database\Connection::connection();
-                // Normaliza e valida e-mail e celular
-                $email = strtolower(trim($form['email']));
-                $celularInput = preg_replace('/\D+/', '', $form['celular'] ?? '');
 
-                // Verifica se e-mail ou celular já existem na view
-                $stmt = $con->prepare("SELECT id, email, celular FROM vw_usuario_contatos WHERE email = :email OR celular = :celular LIMIT 1");
-                $stmt->execute(['email' => $email, 'celular' => $celularInput]);
-                $existe = $stmt->fetch();
-
-                if ($existe) {
-                    $msg = 'E-mail já cadastrado';
-                    if (!empty($celularInput) && !empty($existe['celular']) && preg_replace('/\D+/', '', $existe['celular']) === $celularInput) {
-                        $msg = 'Celular já cadastrado';
-                    }
+                // Verificar se já existe usuário com esse email
+                $stmt = $con->prepare("SELECT id FROM usuario WHERE LOWER(email) = :email LIMIT 1");
+                $stmt->execute(['email' => $email]);
+                if ($stmt->fetch()) {
                     return $this->SendJson($response, [
                         'status' => false,
-                        'msg' => $msg
+                        'msg' => 'E-mail já cadastrado'
                     ], 409);
                 }
 
-                // Verifica se o e-mail/celular foram verificados via código
-                $verEmail = $con->prepare("SELECT id FROM verificacao_contato WHERE tipo = 'email' AND contato = :email AND usado = true AND codigo_gerado_em > (NOW() - INTERVAL '24 HOURS') LIMIT 1");
-                $verEmail->execute(['email' => $email]);
-                if (!$verEmail->fetch()) {
-                    return $this->SendJson($response, ['status' => false, 'msg' => 'E-mail não verificado'], 400);
-                }
-
-                if (!empty($celularInput)) {
-                    $verCel = $con->prepare("SELECT id FROM verificacao_contato WHERE tipo = 'celular' AND contato = :celular AND usado = true AND codigo_gerado_em > (NOW() - INTERVAL '24 HOURS') LIMIT 1");
-                    $verCel->execute(['celular' => $celularInput]);
-                    if (!$verCel->fetch()) {
-                        return $this->SendJson($response, ['status' => false, 'msg' => 'Celular não verificado'], 400);
+                // Verificar CPF duplicado (se fornecido)
+                if (!empty($cpf)) {
+                    $stmt = $con->prepare("SELECT id FROM usuario WHERE cpf = :cpf LIMIT 1");
+                    $stmt->execute(['cpf' => $cpf]);
+                    if ($stmt->fetch()) {
+                        return $this->SendJson($response, [
+                            'status' => false,
+                            'msg' => 'CPF já cadastrado'
+                        ], 409);
                     }
                 }
 
-                // Insere usuario e contatos usando Connection
-                $con->beginTransaction();
-                $senhaHash = password_hash($form['senhaCadastro'], PASSWORD_DEFAULT);
-                $stmt = $con->prepare("INSERT INTO usuario (nome, senha, ativo) VALUES (:nome, :senha, :ativo) RETURNING id");
-                $stmt->execute(['nome' => $form['nome'], 'senha' => $senhaHash, 'ativo' => true]);
-                $userId = $stmt->fetchColumn();
+                // Inserir novo usuário
+                $senhaHash = password_hash($senha, PASSWORD_DEFAULT);
+                $stmt = $con->prepare("
+                    INSERT INTO usuario (nome, email, cpf, celular, senha, ativo, administrador) 
+                    VALUES (:nome, :email, :cpf, :celular, :senha, :ativo, :admin)
+                ");
 
-                $contactStmt = $con->prepare("INSERT INTO contato (id_usuario, tipo, contato, data_cadastro, data_alteracao) VALUES (:id_usuario, :tipo, :contato, NOW(), NOW())");
-                $contactStmt->execute(['id_usuario' => $userId, 'tipo' => 'email', 'contato' => $email]);
-                if (!empty($celularInput)) {
-                    $contactStmt->execute(['id_usuario' => $userId, 'tipo' => 'celular', 'contato' => $celularInput]);
-                }
-                $con->commit();
-            } catch (\Exception $e) {
-                error_log('[LOGIN][precadastro] DB unavailable, using file fallback: ' . $e->getMessage());
-                $fileFallback = true;
-                $emailLower = strtolower(trim($form['email']));
-                $contatoCel = $celularInput;
+                $stmt->execute([
+                    ':nome' => $nome,
+                    ':email' => $email,
+                    ':cpf' => !empty($cpf) ? $cpf : null,
+                    ':celular' => !empty($celular) ? $celular : null,
+                    ':senha' => $senhaHash,
+                    ':ativo' => 1,
+                    ':admin' => 0
+                ]);
 
-                // Verifica duplicatas em arquivo
-                $usersFile = __DIR__ . '/../../data/usuarios.json';
-                $users = [];
-                if (file_exists($usersFile)) {
-                    $t = file_get_contents($usersFile);
-                    $users = $t ? json_decode($t, true) ?? [] : [];
-                }
-                foreach ($users as $u) {
-                    if (isset($u['email']) && strtolower($u['email']) === $emailLower) {
-                        return $this->SendJson($response, ['status' => false, 'msg' => 'E-mail já cadastrado'], 409);
-                    }
-                    if (!empty($contatoCel) && isset($u['contatos']) && in_array($contatoCel, $u['contatos'])) {
-                        return $this->SendJson($response, ['status' => false, 'msg' => 'Celular já cadastrado'], 409);
-                    }
-                }
+                error_log("[LOGIN][precadastro] Novo usuário criado: $email");
 
-                // Verifica se email/celular foram verificados via arquivo
-                $verFile = __DIR__ . '/../../data/verificacoes.json';
-                $verArr = [];
-                if (file_exists($verFile)) {
-                    $t = file_get_contents($verFile);
-                    $verArr = $t ? json_decode($t, true) ?? [] : [];
-                }
-                $checkedEmail = false;
-                foreach (array_reverse($verArr) as $v) {
-                    if ($v['tipo'] === 'email' && strtolower($v['contato']) === $emailLower && $v['usado'] === true && (strtotime($v['codigo_gerado_em']) + 24 * 3600) > time()) {
-                        $checkedEmail = true;
-                        break;
-                    }
-                }
-                if (!$checkedEmail) {
-                    return $this->SendJson($response, ['status' => false, 'msg' => 'E-mail não verificado'], 400);
-                }
-                if (!empty($contatoCel)) {
-                    $checkedCel = false;
-                    foreach (array_reverse($verArr) as $v) {
-                        if ($v['tipo'] === 'celular' && preg_replace('/\D+/', '', $v['contato']) === $contatoCel && $v['usado'] === true && (strtotime($v['codigo_gerado_em']) + 24 * 3600) > time()) {
-                            $checkedCel = true;
-                            break;
-                        }
-                    }
-                    if (!$checkedCel) {
-                        return $this->SendJson($response, ['status' => false, 'msg' => 'Celular não verificado'], 400);
-                    }
-                }
-
-                // Inserir usuário no arquivo
-                $id = (count($users) ? intval($users[count($users) - 1]['id']) : 0) + 1;
-                $senhaHash = password_hash($form['senhaCadastro'], PASSWORD_DEFAULT);
-                $new = ['id' => $id, 'nome' => $form['nome'], 'email' => $emailLower, 'senha' => $senhaHash, 'ativo' => true, 'contatos' => [$emailLower]];
-                if (!empty($contatoCel)) $new['contatos'][] = $contatoCel;
-                $users[] = $new;
-                file_put_contents($usersFile, json_encode($users));
+                return $this->SendJson($response, [
+                    'status' => true,
+                    'msg' => 'Pré-cadastro realizado com sucesso! Você pode fazer login agora.'
+                ], 201);
+            } catch (\PDOException $e) {
+                error_log('[LOGIN][precadastro] Erro BD: ' . $e->getMessage());
+                return $this->SendJson($response, [
+                    'status' => false,
+                    'msg' => 'Erro ao salvar dados: ' . $e->getMessage()
+                ], 500);
             }
-
-            return $this->SendJson($response, [
-                'status' => true,
-                'msg' => 'Cadastro realizado com sucesso'
-            ], 201);
         } catch (\Exception $e) {
+            error_log('[LOGIN][precadastro] Erro geral: ' . $e->getMessage());
             return $this->SendJson($response, [
                 'status' => false,
-                'msg' => $e->getMessage()
+                'msg' => 'Erro: ' . $e->getMessage()
             ], 500);
         }
-
-        return $response
-            ->withHeader('Content-Type', 'application/json')
-            ->withStatus(200);
     }
 
     // Envia código de verificação para um contato (email ou celular)
@@ -195,7 +153,7 @@ class Login extends Base
         try {
             $form = $request->getParsedBody();
             if (empty($form)) {
-                $json = json_decode((string)$request->getBody(), true);
+                $json = json_decode((string) $request->getBody(), true);
                 $form = $json ?? [];
             }
             $tipo = $form['tipo'] ?? '';
@@ -264,7 +222,8 @@ class Login extends Base
                 $now = date('Y-m-d H:i:s');
 
                 $file = __DIR__ . '/../../data/verificacoes.json';
-                if (!is_dir(dirname($file))) @mkdir(dirname($file), 0755, true);
+                if (!is_dir(dirname($file)))
+                    @mkdir(dirname($file), 0755, true);
                 $arr = [];
                 if (file_exists($file)) {
                     $txt = file_get_contents($file);
@@ -312,7 +271,7 @@ class Login extends Base
         try {
             $form = $request->getParsedBody();
             if (empty($form)) {
-                $json = json_decode((string)$request->getBody(), true);
+                $json = json_decode((string) $request->getBody(), true);
                 $form = $json ?? [];
             }
             $tipo = $form['tipo'] ?? '';
@@ -383,7 +342,8 @@ class Login extends Base
                 $cntInvalid = 0;
                 $cut = time() - 3600;
                 foreach ($tries as $tr) {
-                    if ($tr['tipo'] === $tipo && $tr['contato'] === $contatoParam && !$tr['sucesso'] && strtotime($tr['criado_em']) > $cut) $cntInvalid++;
+                    if ($tr['tipo'] === $tipo && $tr['contato'] === $contatoParam && !$tr['sucesso'] && strtotime($tr['criado_em']) > $cut)
+                        $cntInvalid++;
                 }
                 if ($cntInvalid >= 5) {
                     return $this->SendJson($response, ['status' => false, 'msg' => 'Muitas tentativas inválidas. Tente mais tarde'], 429);
@@ -430,54 +390,58 @@ class Login extends Base
         }
     }
 
-
-
-
     // Autenticação de login
-    public function autenticar($request, $response)
+    use Template;
+
+    public function autenticar(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
+
+        $data = $request->getParsedBody();
+        if (empty($data)) {
+            $data = json_decode((string) $request->getBody(), true) ?? [];
+        }
+
+        $login = trim($data['login'] ?? '');
+        $senha = $data['senha'] ?? '';
+
+        if (!$login || !$senha) {
+            return $this->SendJson($response, [
+                'status' => false,
+                'msg' => 'Informe login e senha'
+            ], 400);
+        }
+
         try {
-            $form = $request->getParsedBody();
-            if (empty($form)) {
-                $json = json_decode((string)$request->getBody(), true);
-                $form = $json ?? [];
-            }
-
-            // Log para depuração (não exponha em produção)
-            $remoteIp = $request->getServerParams()['REMOTE_ADDR'] ?? 'unknown';
-            $ct = $request->getHeaderLine('Content-Type');
-            $logBody = $form;
-            if (isset($logBody['senha'])) $logBody['senha'] = '***';
-            error_log("[LOGIN][autenticar] IP: $remoteIp CT: $ct BODY: " . json_encode($logBody));
-
-            if (empty($form['login']) || empty($form['senha'])) {
-                return $this->SendJson($response, [
-                    'status' => false,
-                    'msg' => 'Informe login e senha'
-                ], 400);
-            }
-
             $con = \app\database\Connection::connection();
-            // Normaliza o login: aceita e-mail, celular (somente dígitos) ou CPF
-            $loginRaw = trim($form['login']);
-            $loginLower = strtolower($loginRaw);
-            $loginCel = preg_replace('/\D+/', '', $loginRaw);
-            $stmt = $con->prepare("SELECT * FROM vw_usuario_contatos WHERE (LOWER(email) = :login_lower OR regexp_replace(celular, '\\\\D', '', 'g') = :login_cel OR cpf = :login_raw) LIMIT 1");
-            $stmt->execute(['login_lower' => $loginLower, 'login_cel' => $loginCel, 'login_raw' => $loginRaw]);
-            $user = $stmt->fetch();
 
-            if (!$user) {
+            $loginLower = strtolower($login);
+            $loginCel   = preg_replace('/\D+/', '', $login);
+
+            $stmt = $con->prepare("
+                SELECT *
+                FROM vw_usuario_contatos
+                WHERE LOWER(email) = :email
+                   OR regexp_replace(celular, '\\D', '', 'g') = :celular
+                   OR cpf = :cpf
+                LIMIT 1
+            ");
+
+            $stmt->execute([
+                'email'   => $loginLower,
+                'celular' => $loginCel,
+                'cpf'     => $login
+            ]);
+
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$user || !password_verify($senha, $user['senha'])) {
                 return $this->SendJson($response, [
                     'status' => false,
                     'msg' => 'Usuário ou senha inválidos'
-                ], 403);
-            }
-
-            if (!password_verify($form['senha'], $user['senha'])) {
-                return $this->SendJson($response, [
-                    'status' => false,
-                    'msg' => 'Usuário ou senha inválidos'
-                ], 403);
+                ], 401);
             }
 
             if (!$user['ativo']) {
@@ -488,27 +452,25 @@ class Login extends Base
             }
 
             $_SESSION['usuario'] = [
-                'id' => $user['id'],
-                'nome' => $user['nome'],
-                'email' => $user['email'],
-                'logado' => true,
-                'ativo' => !empty($user['ativo']) ? (bool)$user['ativo'] : true,
-                'administrador' => isset($user['administrador']) ? (bool)$user['administrador'] : false
+                'logado'        => true,
+                'id'            => $user['id'],
+                'nome'          => $user['nome'],
+                'email'         => $user['email'],
+                'administrador' => (bool)($user['administrador'] ?? false),
+                'ativo'         => (bool)($user['ativo'] ?? true)
             ];
 
             return $this->SendJson($response, [
                 'status' => true,
-                'msg' => 'Login realizado com sucesso',
-                'id' => $user['id']
-            ], 200);
+                'msg' => 'Login realizado com sucesso'
+            ]);
         } catch (\Exception $e) {
             return $this->SendJson($response, [
                 'status' => false,
-                'msg' => $e->getMessage()
+                'msg' => 'Erro interno no servidor'
             ], 500);
         }
     }
-
 
     // Envia código de verificação para o e-mail informado (se existir)
     public function recuperarSenha($request, $response)
@@ -535,17 +497,16 @@ class Login extends Base
             $now = date('Y-m-d H:i:s');
             UpdateQuery::table('usuario')->set(['codigo_verificacao' => $codigo, 'codigo_gerado_em' => $now])->where('id', '=', $user['id'])->update();
 
-            $body = "Olá {$user['nome']},<br><br>Utilize o código a seguir para redefinir sua senha: <strong>{$codigo}</strong><br><br>Se você não solicitou, ignore este e-mail.";
+            error_log("[RECUPERAR SENHA] Código gerado para {$email}: {$codigo}");
 
-            $mailer = new \app\source\Email();
-            $sent = $mailer->add('Recuperação de senha', $body, $user['nome'], $email)->send();
-
-            if (!$sent) {
-                $err = $mailer->error();
-                return $this->SendJson($response, ['success' => false, 'message' => 'Erro ao enviar e-mail.' . ($err ? ' ' . $err->getMessage() : '')], 500);
+            // Retorna sucesso (código já foi salvo no BD)
+            // Em ambiente de desenvolvimento, retorna o código para teste
+            $isDev = php_sapi_name() === 'cli-server';
+            $resp = ['success' => true, 'message' => 'Se o e-mail existir, você receberá instruções para recuperar a senha.'];
+            if ($isDev) {
+                $resp['codigo_teste'] = $codigo; // Apenas para teste/desenvolvimento
             }
-
-            return $this->SendJson($response, ['success' => true, 'message' => 'Se o e-mail existir, você receberá instruções para recuperar a senha.']);
+            return $this->SendJson($response, $resp);
         } catch (\Exception $e) {
             return $this->SendJson($response, ['success' => false, 'message' => 'Erro: ' . $e->getMessage()], 500);
         }
@@ -578,13 +539,11 @@ class Login extends Base
             if ($generated && (strtotime($generated) + 15 * 60) < time()) {
                 return $this->SendJson($response, ['success' => false, 'message' => 'Código expirado'], 403);
             }
-
             UpdateQuery::table('usuario')->set([
                 'senha' => password_hash($senha, PASSWORD_DEFAULT),
                 'codigo_verificacao' => null,
                 'codigo_gerado_em' => null
             ])->where('id', '=', $user['id'])->update();
-
             return $this->SendJson($response, ['success' => true, 'message' => 'Senha atualizada com sucesso']);
         } catch (\Exception $e) {
             return $this->SendJson($response, ['success' => false, 'message' => 'Erro: ' . $e->getMessage()], 500);

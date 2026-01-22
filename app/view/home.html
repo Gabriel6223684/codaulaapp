@@ -5,7 +5,7 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-sm-6">
-                <h3 class="mb-0">Visão geral do negócio</h3>
+                <h3 class="mb-0">Bem-vindo, {{ usuario.nome }}! 👋</h3>
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-end">
@@ -16,5 +16,12 @@
     </div>
 </div>
 
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="alert alert-success" role="alert">
+            ✅ Você está conectado como <strong>{{ usuario.email }}</strong>
+        </div>
+    </div>
+</div>
 
 {% endblock %}

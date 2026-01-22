@@ -28,3 +28,4 @@ Observações:
 - O código expira em 15 minutos por padrão.
 - Se os e-mails não estiverem sendo entregues, verifique as configurações em `app/helper/settings.php` e os logs do servidor de e-mail.
 - Execute o arquivo `migrations/20260104_add_codigo_columns.sql` para adicionar as colunas necessárias.
+- Execute o arquivo `migrations/20260104_add_codigo_columns.sql` para adicionar as colunas necessárias.
