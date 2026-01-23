@@ -43,7 +43,7 @@ class Login extends Base
             return $this->SendJson($response, ['status' => false, 'msg' => $e->getMessage()], 500);
         }
     }
-
+    
     // Pré-cadastro de usuários
     public function precadastro($request, $response)
     {
@@ -393,12 +393,11 @@ class Login extends Base
     // Autenticação de login
     use Template;
 
-    public function autenticar(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+    public function autenticar($request, $response)
     {
         if (session_status() !== PHP_SESSION_ACTIVE) {
             session_start();
         }
-
         $data = $request->getParsedBody();
         if (empty($data)) {
             $data = json_decode((string) $request->getBody(), true) ?? [];
@@ -418,7 +417,7 @@ class Login extends Base
             $con = \app\database\Connection::connection();
 
             $loginLower = strtolower($login);
-            $loginCel   = preg_replace('/\D+/', '', $login);
+            $loginCel = preg_replace('/\D+/', '', $login);
 
             $stmt = $con->prepare("
                 SELECT *
@@ -430,9 +429,9 @@ class Login extends Base
             ");
 
             $stmt->execute([
-                'email'   => $loginLower,
+                'email' => $loginLower,
                 'celular' => $loginCel,
-                'cpf'     => $login
+                'cpf' => $login
             ]);
 
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -452,12 +451,12 @@ class Login extends Base
             }
 
             $_SESSION['usuario'] = [
-                'logado'        => true,
-                'id'            => $user['id'],
-                'nome'          => $user['nome'],
-                'email'         => $user['email'],
-                'administrador' => (bool)($user['administrador'] ?? false),
-                'ativo'         => (bool)($user['ativo'] ?? true)
+                'logado' => true,
+                'id' => $user['id'],
+                'nome' => $user['nome'],
+                'email' => $user['email'],
+                'administrador' => (bool) ($user['administrador'] ?? false),
+                'ativo' => (bool) ($user['ativo'] ?? true)
             ];
 
             return $this->SendJson($response, [
@@ -478,7 +477,7 @@ class Login extends Base
         try {
             $form = $request->getParsedBody();
             if (empty($form)) {
-                $json = json_decode((string)$request->getBody(), true);
+                $json = json_decode((string) $request->getBody(), true);
                 $form = $json ?? [];
             }
             $email = $form['email'] ?? '';
@@ -518,7 +517,7 @@ class Login extends Base
         try {
             $form = $request->getParsedBody();
             if (empty($form)) {
-                $json = json_decode((string)$request->getBody(), true);
+                $json = json_decode((string) $request->getBody(), true);
                 $form = $json ?? [];
             }
             $codigo = $form['codigo'] ?? '';

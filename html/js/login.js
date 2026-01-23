@@ -1,3 +1,6 @@
+import { Requests } from "./Requests.js";
+const Login = document.getElementById('prelogin');
+
 // ========== FUNÇÕES DE EXIBIÇÃO DE MENSAGENS ==========
 function showLoginError(msg) {
     const el = document.getElementById('loginError');
@@ -24,56 +27,11 @@ function clearLoginError() {
 }
 
 // ========== EVENTO DO BOTÃO "ENTRAR" ==========
-document.getElementById('prelogin')?.addEventListener('click', async function (e) {
-    e.preventDefault();
-    clearLoginError();
-
-    const login = document.getElementById('loginEmail')?.value?.trim();
-    const senha = document.getElementById('loginPassword')?.value?.trim();
-    const remember = document.getElementById('rememberMe')?.checked || false;
-
-    // Log dos dados
-    console.log('Dados sendo enviados:', { login, senha, remember });
-
-    // Validação básica
-    if (!login || !senha) {
-        showLoginError('E-mail/telefone e senha são obrigatórios');
-        return;
-    }
-
+Login.addEventListener('click', async () => {
     try {
-        // Enviando dados para o backend
-        const payload = {
-            login: login,
-            senha: senha,
-            remember: remember
-        };
+        const response = await Requests.SetForm('formlogin').Post('/login/autenticar');
 
-        console.log('Enviando fetch para /login com:', payload);
-
-        const res = await fetch('/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify(payload)
-        });
-
-        console.log('Resposta do servidor - Status:', res.status);
-
-        const data = await res.json();
-        console.log('Dados recebidos:', data);
-
-        if (data.status) {
-            showLoginSuccess(data.msg || 'Login realizado com sucesso!');
-            setTimeout(() => {
-                window.location.href = '/dashboard';
-            }, 1000);
-        } else {
-            showLoginError(data.msg || 'Erro ao fazer login');
-        }
-    } catch (err) {
-        showLoginError('Erro de rede: ' + err.message);
-        console.error('Erro ao fazer login:', err);
+    } catch (error) {
     }
 });
 
@@ -138,29 +96,7 @@ document.getElementById("buttaoPrecadastro")?.addEventListener("click", async ()
             })
         });
 
-        console.log('Status da resposta:', response.status);
-
-        if (response.status === 401) {
-            showPrecadastroAlert("Não autorizado (401). Verifique configurações do servidor.", false);
-            return;
-        }
-
         let data;
-        try {
-            const ct = response.headers.get("content-type") || "";
-            if (ct.includes("application/json")) {
-                data = await response.json();
-            } else {
-                const txt = await response.text();
-                showPrecadastroAlert("Resposta inválida do servidor: " + txt, false);
-                console.error('Resposta não JSON:', txt);
-                return;
-            }
-        } catch (err) {
-            showPrecadastroAlert("Erro ao processar resposta: " + err.message, false);
-            console.error('Erro ao parsear JSON:', err);
-            return;
-        }
 
         console.log('Dados recebidos:', data);
 

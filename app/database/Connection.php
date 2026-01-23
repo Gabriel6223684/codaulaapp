@@ -32,8 +32,8 @@ class Connection
             $host = getenv('DB_HOST') ?: 'localhost';
             $port = getenv('DB_PORT') ?: '5432';
             $dbname = getenv('DB_NAME') ?: 'senac';
-            $user = getenv('DB_USER') ?: 'gabriel';
-            $password = getenv('DB_PASSWORD') ?: '2009';
+            $user = getenv('DB_USER') ?: 'senac';
+            $password = getenv('DB_PASSWORD') ?: 'senac';
 
             // Criando a DSN para PostgreSQL
             $dsn = "pgsql:host={$host};port={$port};dbname={$dbname}";

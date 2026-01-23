@@ -205,7 +205,7 @@ public static function connection(): PDO
         $host = getenv('DB_HOST') ?: 'localhost';
         $port = getenv('DB_PORT') ?: '5432';
         $dbname = getenv('DB_NAME') ?: 'senac';
-        $user = getenv('DB_USER') ?: 'gabriel';
+        $user = getenv('DB_USER') ?: 'senac';
         $password = getenv('DB_PASSWORD') ?: 'senac';
 
         $dsn = "pgsql:host={$host};port={$port};dbname={$dbname}";
@@ -305,7 +305,7 @@ Adicione ao arquivo `.env` ou `docker-compose.yml`:
 DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=senac
-DB_USER=gabriel
+DB_USER=senac
 DB_PASSWORD=senac
 ```
 
