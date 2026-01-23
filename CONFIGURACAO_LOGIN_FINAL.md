@@ -4,16 +4,16 @@
 
 ### 1. **Connection.php** - Corrigido
 - ✅ Removida sintaxe inválida
-- ✅ Senha atualizada para `2009`
+- ✅ Senha atualizada para `senac`
 - ✅ Credenciais:
   - Host: `localhost`
   - Port: `5432`
   - Banco: `senac`
-  - Usuário: `gabriel`
-  - Senha: `2009`
+  - Usuário: `senac`
+  - Senha: `senac`
 
 ### 2. **Banco de Dados PostgreSQL** - Criado
-- ✅ Usuário `gabriel` criado com senha `2009`
+- ✅ Usuário `senac` criado com senha `senac`
 - ✅ Banco `senac` criado
 - ✅ Permissões concedidas
 - ✅ Tabelas criadas:
@@ -49,8 +49,8 @@
 ### 2. **Verificar no PgAdmin:**
 1. Abra PgAdmin
 2. Servidor: `localhost:5432`
-3. Usuário: `gabriel`
-4. Senha: `2009`
+3. Usuário: `senac`
+4. Senha: `senac`
 5. Banco: `senac`
 6. Vá para: `Databases` → `senac` → `Schemas` → `public` → `Tables`
 7. Você verá as 3 tabelas criadas
@@ -58,7 +58,7 @@
 ### 3. **Verificar pelo Terminal:**
 ```bash
 # Conectar ao banco
-psql -h localhost -U gabriel -d senac
+psql -h localhost -U senac -d senac
 
 # Ver usuários
 SELECT * FROM usuario;
@@ -76,8 +76,8 @@ SELECT * FROM verificacao_contato;
 ├─ Host: localhost
 ├─ Port: 5432
 ├─ Banco: senac
-├─ Usuário: gabriel
-└─ Senha: 2009
+├─ Usuário: senac
+└─ Senha: senac
 
 👤 Usuário Teste
 ├─ Email: teste@email.com
@@ -117,7 +117,7 @@ JavaScript redireciona para /dashboard
 1. **Criar usuário admin:**
    ```sql
    INSERT INTO usuario (nome, email, cpf, celular, senha, ativo, administrador) 
-   VALUES ('Admin', 'admin@email.com', '99999999999', '11988888888', '$2y$10$...', true, true);
+   VALUES ('Gabriel', 'gabrielgb.luiz000@email.com', '99999999999', '11988888888', '1324', true, true);
    ```
 
 2. **Adicionar variáveis de ambiente (`.env`):**
@@ -125,8 +125,8 @@ JavaScript redireciona para /dashboard
    DB_HOST=localhost
    DB_PORT=5432
    DB_NAME=senac
-   DB_USER=gabriel
-   DB_PASSWORD=2009
+   DB_USER=senac
+   DB_PASSWORD=senac
    ```
 
 3. **Usar as variáveis no Connection.php:** ✓ Já está pronto!
@@ -136,8 +136,8 @@ JavaScript redireciona para /dashboard
 ## 🐛 Troubleshooting:
 
 **Erro: "password authentication failed"**
-- Verifique se a senha `2009` está correta
-- Teste com: `psql -h localhost -U gabriel -d senac`
+- Verifique se a senha `senac` está correta
+- Teste com: `psql -h localhost -U senac -d senac`
 
 **Erro: "permission denied for table usuario"**
 - Execute os GRANTs novamente
@@ -154,7 +154,7 @@ JavaScript redireciona para /dashboard
 - [x] Connection.php corrigido
 - [x] Senhas atualizadas para `2009`
 - [x] Banco `senac` criado
-- [x] Usuário `gabriel` criado
+- [x] Usuário `senac` criado
 - [x] Tabelas criadas
 - [x] Permissões concedidas
 - [x] Usuário de teste criado

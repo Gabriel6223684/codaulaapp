@@ -10,8 +10,8 @@ try {
     $host = 'localhost';
     $port = '5432';
     $dbname = 'senac';
-    $user = 'gabriel';
-    $password = '2009';
+    $user = 'senac';
+    $password = 'senac';
 
     $dsn = "pgsql:host={$host};port={$port};dbname={$dbname}";
 
