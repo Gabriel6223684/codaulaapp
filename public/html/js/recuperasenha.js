@@ -1,3 +1,5 @@
+import { Requests } from '/public/html/js/modules/Requests.js';
+
 document.addEventListener('DOMContentLoaded', function () {
     let etapa = 1; // 1 = enviar email, 2 = digitar código + nova senha
 

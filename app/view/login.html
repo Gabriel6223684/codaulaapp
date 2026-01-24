@@ -61,12 +61,12 @@
                 <div id="loginError" class="alert alert-danger d-none" role="alert" style="word-break:break-word;">
                 </div>
                 <!-- FORMULÁRIO DE LOGIN -->
-                <form id="formlogin">
+                <form id="formlogin autenticar" method="post">
                     <div class="input-group mb-2">
                         <div class="form-floating">
-                            <input id="loginEmail" name="login" type="text" class="form-control"
-                                placeholder="Seu e-mail, telefone ou CPF" required>
-                            <label for="loginEmail">Informe seu E-mail, Telefone, WhatsApp *</label>
+                            <input id="email" name="email" type="text" class="form-control"
+                                placeholder="Informe seu e-mail" required>
+                            <label for="loginEmail">Informe seu E-mail *</label>
                         </div>
                         <div class="input-group-text">
                             <span class="bi bi-envelope"></span>
@@ -75,9 +75,9 @@
 
                     <div class="input-group mb-2">
                         <div class="form-floating">
-                            <input id="loginPassword" name="senha" type="password" class="form-control"
+                            <input id="senha" name="senha" type="password" class="form-control"
                                 placeholder="Senha" required>
-                            <label for="loginPassword">Informe sua senha *</label>
+                            <label for="senha">Informe sua senha *</label>
                         </div>
                         <div class="input-group-text">
                             <span class="bi bi-lock-fill"></span>
@@ -132,7 +132,7 @@
 
                     <div id="precadastroAlert" class="alert d-none" role="alert" style="word-break:break-word;"></div>
 
-                    <form id="precadastro">
+                    <form id="precadastro" method="post">
 
                         <div class="mb-3">
                             <label class="form-label">Nome *</label>
@@ -152,11 +152,6 @@
                         <div class="mb-3">
                             <label class="form-label">Telefone</label>
                             <input type="text" class="form-control" id="telefone" name="telefone">
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">WhatsApp</label>
-                            <input type="text" class="form-control" id="whatsapp" name="whatsapp">
                         </div>
 
                         <div class="mb-3">
@@ -219,9 +214,9 @@
         crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/4.0.0-rc4/js/adminlte.min.js"></script>
 
-    <script defer type="module" src="/js/login.js"></script>
-    <script defer type="module" src="/js/adminlte.js"></script>
-    <script defer tipe="module" src="/js/recuperasenha.js"></script>
+    <script defer type="module" src="/public/html/js/login.js"></script>
+    <script defer type="module" src="/public/html/js/adminlte.js"></script>
+    <script defer tipe="module" src="/public/html/js/recuperasenha.js"></script>
 
 </body>
 

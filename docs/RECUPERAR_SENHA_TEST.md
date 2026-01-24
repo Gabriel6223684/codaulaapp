@@ -3,7 +3,7 @@ Testes manuais para fluxo de recuperação de senha
 1. Endpoint: /recuperar-senha (POST JSON)
 
 curl -X POST -H "Content-Type: application/json" \
- -d '{"email":"usuario@example.com"}' \
+ -d '{"email":"usuario@gmail.com"}' \
  http://localhost/recuperar-senha
 
 Resposta esperada (200):

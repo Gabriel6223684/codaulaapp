@@ -1,185 +1,120 @@
-// ========== FUNÇÕES DE EXIBIÇÃO DE MENSAGENS ==========
-function showLoginError(msg) {
-    const el = document.getElementById('loginError');
-    if (!el) return;
-    el.textContent = msg;
-    el.classList.remove('d-none', 'alert-success');
-    el.classList.add('alert-danger');
-}
+import { Requests } from '/public/html/js/modules/Requests.js';
+import {
+    showLoginError,
+    clearLoginError,
+    showLoginSuccess
+} from '/public/html/js/modules/LoginMessages.js';
 
-function showLoginSuccess(msg) {
-    const el = document.getElementById('loginError');
-    if (!el) return;
-    el.textContent = msg;
-    el.classList.remove('d-none', 'alert-danger');
-    el.classList.add('alert-success');
-}
+const Login = document.getElementById('prelogin');
 
-function clearLoginError() {
-    const el = document.getElementById('loginError');
-    if (el) {
-        el.classList.add('d-none');
-        el.textContent = '';
-    }
-}
-
-// ========== EVENTO DO BOTÃO "ENTRAR" ==========
-document.getElementById('prelogin')?.addEventListener('click', async function (e) {
-    e.preventDefault();
-    clearLoginError();
-
-    const login = document.getElementById('loginEmail')?.value?.trim();
-    const senha = document.getElementById('loginPassword')?.value?.trim();
-    const remember = document.getElementById('rememberMe')?.checked || false;
-
-    // Log dos dados
-    console.log('Dados sendo enviados:', { login, senha, remember });
-
-    // Validação básica
-    if (!login || !senha) {
-        showLoginError('E-mail/telefone e senha são obrigatórios');
-        return;
-    }
-
+Login?.addEventListener('click', async () => {
     try {
-        // Enviando dados para o backend
-        const payload = {
-            login: login,
-            senha: senha,
-            remember: remember
-        };
+        clearLoginError();
+        const response = await Requests.SetForm('formlogin')
+            .Post('/login/autenticar');
 
-        console.log('Enviando fetch para /login com:', payload);
-
-        const res = await fetch('/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify(payload)
-        });
-
-        console.log('Resposta do servidor - Status:', res.status);
-
-        const data = await res.json();
-        console.log('Dados recebidos:', data);
-
-        if (data.status) {
-            showLoginSuccess(data.msg || 'Login realizado com sucesso!');
-            setTimeout(() => {
-                window.location.href = '/dashboard';
-            }, 1000);
+        if (response?.status) {
+            showLoginSuccess(response.msg || 'Login realizado!');
+            window.location.href = '/';
         } else {
-            showLoginError(data.msg || 'Erro ao fazer login');
+            showLoginError(response?.msg || 'Usuário ou senha inválidos');
         }
-    } catch (err) {
-        showLoginError('Erro de rede: ' + err.message);
-        console.error('Erro ao fazer login:', err);
+
+    } catch (error) {
+        showLoginError('Erro ao tentar login');
+        console.error(error);
     }
 });
 
-function showPrecadastroAlert(msg, success) {
-    const el = document.getElementById('precadastroAlert');
-    if (!el) return;
-    el.textContent = msg;
-    el.classList.remove('d-none', 'alert-success', 'alert-danger');
-    el.classList.add(success ? 'alert-success' : 'alert-danger');
+const response = await fetch("/login/precadastro", {
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json"
+    },
+    credentials: "include",
+    body: JSON.stringify({
+        nome: nome.trim(),
+        email: email.trim(),
+        cpf: cpf.trim(),
+        telefone: telefone.trim(),
+        whatsapp: whatsapp.trim(),
+        senhaCadastro: senha.trim()
+    })
+});
+
+const data = await response.json(); // 🔥 ISSO FALTAVA
+
+console.log('Dados recebidos:', data);
+
+if (data.status) {
+    showPrecadastroAlert(data.msg || "Cadastro realizado com sucesso!", true);
+
+    const modalEl = document.getElementById("modalPreCadastro");
+    if (modalEl) {
+        const modal = bootstrap.Modal.getInstance(modalEl)
+            || new bootstrap.Modal(modalEl);
+
+        setTimeout(() => {
+            modal.hide();
+            document.getElementById("precadastro")?.reset();
+        }, 1500);
+    }
+} else {
+    showPrecadastroAlert(data.msg || "Erro no cadastro", false);
 }
 
-// ================= PRÉ-CADASTRO =================
+const autenticar = document.getElementById('autenticar');
 
-document.getElementById("buttaoPrecadastro")?.addEventListener("click", async () => {
-    const nome = document.getElementById("nome")?.value || '';
-    const email = document.getElementById("email")?.value || '';
-    const cpf = document.getElementById("cpf")?.value || '';
-    const telefone = document.getElementById("telefone")?.value || '';
-    const whatsapp = document.getElementById("whatsapp")?.value || '';
-    const senha = document.getElementById("senha")?.value || '';
-
-    // Limpar alerta anterior
-    showPrecadastroAlert("", true);
-
-    // Validações básicas - APENAS OBRIGATÓRIOS
-    if (!nome.trim()) {
-        showPrecadastroAlert('Nome é obrigatório', false);
-        return;
-    }
-    if (!email.trim()) {
-        showPrecadastroAlert('E-mail é obrigatório', false);
-        return;
-    }
-    if (!senha.trim()) {
-        showPrecadastroAlert('Senha é obrigatória', false);
-        return;
-    }
-
-    // Validar email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email.trim())) {
-        showPrecadastroAlert('E-mail inválido', false);
-        return;
-    }
-
-    console.log('Enviando pré-cadastro:', { nome, email, cpf, telefone, senha: '***' });
-
+autenticar?.addEventListener('click', async () => {
     try {
-        const response = await fetch("/login/precadastro", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            credentials: "include",
-            body: JSON.stringify({
-                nome: nome.trim(),
-                email: email.trim(),
-                cpf: cpf.trim(),
-                telefone: telefone.trim(),
-                whatsapp: whatsapp.trim(),
-                senhaCadastro: senha.trim()
-            })
-        });
-
-        console.log('Status da resposta:', response.status);
-
-        if (response.status === 401) {
-            showPrecadastroAlert("Não autorizado (401). Verifique configurações do servidor.", false);
-            return;
+        clearLoginError();
+        const response = await Requests.SetForm('formlogin')
+            .Post('/login/autenticar');
+        if (response?.status) {
+            showLoginSuccess(response.msg || 'Login realizado!');
+            window.location.href = '/';
+        } else {
+            showLoginError(response?.msg || 'Usuário ou senha inválidos');
         }
+    } catch (error) {
+        showLoginError('Erro ao tentar login');
+        console.error(error);
+    }
+});
 
-        let data;
-        try {
-            const ct = response.headers.get("content-type") || "";
-            if (ct.includes("application/json")) {
-                data = await response.json();
-            } else {
-                const txt = await response.text();
-                showPrecadastroAlert("Resposta inválida do servidor: " + txt, false);
-                console.error('Resposta não JSON:', txt);
-                return;
-            }
-        } catch (err) {
-            showPrecadastroAlert("Erro ao processar resposta: " + err.message, false);
-            console.error('Erro ao parsear JSON:', err);
-            return;
-        }
+const precadastro = document.getElementById('precadastro');
 
-        console.log('Dados recebidos:', data);
-
-        if (data.status) {
-            showPrecadastroAlert(data.msg || "Cadastro realizado com sucesso!", true);
+precadastro?.addEventListener('click', async () => {
+    try {
+        clearPrecadastroAlert();
+        const response = await Requests.SetForm('precadastro')
+            .Post('/login/precadastro');
+        if (response?.status) {
+            showPrecadastroAlert(response.msg || "Cadastro realizado com sucesso!", true);
             const modalEl = document.getElementById("modalPreCadastro");
             if (modalEl) {
-                const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                const modal = bootstrap.Modal.getInstance(modalEl)
+                    || new bootstrap.Modal(modalEl);
                 setTimeout(() => {
                     modal.hide();
-                    // Limpar formulário
                     document.getElementById("precadastro")?.reset();
                 }, 1500);
             }
         } else {
-            showPrecadastroAlert(data.msg || "Erro no cadastro", false);
+            showPrecadastroAlert(response?.msg || "Erro no cadastro", false);
         }
-    } catch (err) {
-        showPrecadastroAlert("Erro de rede: " + err.message, false);
-        console.error('Erro ao enviar pré-cadastro:', err);
+    } catch (error) {
+        showPrecadastroAlert("Erro ao tentar cadastrar", false);
+        console.error(error);
     }
 });
+
+const prelogin = {
+    nome: 'nome',
+    email: 'email',
+    cpf: 'cpf',
+    telefone: 'telefone',
+    whatsapp: 'whatsapp',
+    senha: 'senha'
+}
+export { prelogin };

@@ -1,10 +1,11 @@
 <?php
 
 use Slim\Routing\RouteCollectorProxy;
-use app\controller\Home;
-use app\controller\Login;
-use app\controller\User;
-use app\middleware\Middleware;
+use App\Controller\Home;
+use App\Controller\Login;
+use App\Controller\User;
+use App\Middleware\Middleware;
+
 
 // =====================
 // ROTAS PÚBLICAS
@@ -20,7 +21,8 @@ $app->group('/login', function (RouteCollectorProxy $group) {
     $group->post('/validar-codigo', Login::class . ':validarCodigo');
     $group->post('/enviar-codigo-contato', Login::class . ':enviarCodigoContato');
     $group->post('/confirmar-codigo-contato', Login::class . ':confirmarCodigoContato');
-})->add(\app\middleware\Middleware::authentication());
+    $group->post('/autenticar', Login::class . ':/autenticar');
+});
 
 // Health check
 $app->get('/ping', Login::class . ':ping');
@@ -30,14 +32,12 @@ $app->get('/ping', Login::class . ':ping');
 // ROTAS PROTEGIDAS
 // =====================
 
-$app->group('', function (RouteCollectorProxy $group) {
+$app->group('/', function (RouteCollectorProxy $group) {
 
-    // Dashboard
     $group->get('/', Home::class . ':home');
     $group->get('/home', Home::class . ':home');
     $group->get('/dashboard', Home::class . ':home');
 
-    // Usuário
     $group->group('/usuario', function (RouteCollectorProxy $group) {
         $group->get('/listuser', User::class . ':listuser');
         $group->get('/cadastro', User::class . ':cadastro');
@@ -45,4 +45,5 @@ $app->group('', function (RouteCollectorProxy $group) {
         $group->post('/insert', User::class . ':insert');
         $group->post('/update', User::class . ':update');
     });
-})->add(\app\middleware\Middleware::authentication());
+
+})->add(Middleware::authentication());

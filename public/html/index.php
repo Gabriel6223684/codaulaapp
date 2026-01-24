@@ -1,10 +1,11 @@
 <?php
-session_start(); 
+session_start();
 
 use Slim\Factory\AppFactory;
 
 require __DIR__ . '/../vendor/autoload.php';
 
+/** @var \Slim\App $app */
 $app = AppFactory::create();
 
 // Middleware de roteamento e erros

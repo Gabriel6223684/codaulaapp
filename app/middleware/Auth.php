@@ -2,9 +2,9 @@
 
 namespace app\middleware;
 
-class Middleware
+class Auth
 {
-    public static function authentication()
+    public static function route()
     {
         $middleware = function ($request, $handler) {
             $response = $handler->handle($request);

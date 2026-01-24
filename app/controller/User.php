@@ -63,9 +63,12 @@ class User extends Base
             $FieldAndValues = [
                 'nome' => $form['nome'],
                 'sobrenome' => $form['sobrenome'],
+                'email' => $form['email'],
                 'cpf' => $form['cpf'],
-                'rg' => $form['rg']
-            ];
+                'telefone' => $form['telefone'],
+                'senha' => $form['senha'],
+                
+                ];
             $IsSave = InsertQuery::table('usuario')->save($FieldAndValues);
             if (!$IsSave) {
                 return $this->SendJson($response, ['status' => false, 'msg' => 'Restrição: ' . $IsSave, 'id' => 0], 403);
@@ -87,8 +90,10 @@ class User extends Base
             $FieldAndValues = [
                 'nome' => $form['nome'],
                 'sobrenome' => $form['sobrenome'],
+                'email' => $form['email'],
                 'cpf' => $form['cpf'],
-                'rg' => $form['rg']
+                'telefone' => $form['telefone'],
+                'senha' => $form['senha']
             ];
             $IsUpdate = UpdateQuery::table('usuario')->set($FieldAndValues)->where('id', '=', $id)->update();
             if (!$IsUpdate) {

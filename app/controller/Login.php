@@ -2,19 +2,33 @@
 
 namespace app\controller;
 
-use app\database\builder\UpdateQuery;
-use app\database\builder\SelectQuery;
-use app\database\builder\InsertQuery;
+use App\Database\Builder\UpdateQuery;
+use App\Database\Builder\SelectQuery;
+use App\Database\Builder\InsertQuery;
+use App\Traits\Template;
 
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use app\trait\Template;
+
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
 use PDO;
 
 class Login extends Base
 {
     // Renderiza a página de login
-    public function login(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+    public function login( $request, $response):
+
+    header('Content-Type: text/html; charset=UTF-8');
+    $json_data = file_get_contents('/login/autenticar', true);
+    $dados = json_decode($json_data, true);
+    
+    if ($dados) {
+        $email = trim($dados['email'] ?? '');
+        $senha = $dados['senha'] ?? '';
+    } else {
+        $email = '';
+        $senha = '';
+    }
+
     {
         try {
             return $this->getTwig()->render(
@@ -29,6 +43,7 @@ class Login extends Base
             ], 500);
         }
     }
+}
 
     // Health check endpoint to test server responses
     public function ping($request, $response)
@@ -72,7 +87,7 @@ class Login extends Base
             $nome = trim($form['nome']);
             $email = strtolower(trim($form['email']));
             $cpf = preg_replace('/\D+/', '', $form['cpf'] ?? '');
-            $celular = preg_replace('/\D+/', '', $form['telefone'] ?? $form['celular'] ?? '');
+            $telefone = preg_replace('/\D+/', '', $form['telefone'] ?? $form['telefone'] ?? '');
             $senha = $form['senhaCadastro'];
 
             // Validar email
@@ -159,7 +174,7 @@ class Login extends Base
             $tipo = $form['tipo'] ?? '';
             $contato = trim($form['contato'] ?? '');
 
-            if (empty($tipo) || empty($contato) || !in_array($tipo, ['email', 'celular'])) {
+            if (empty($tipo) || empty($contato) || !in_array($tipo, ['email', 'telefone'])) {
                 return $this->SendJson($response, ['status' => false, 'msg' => 'Tipo ou contato inválido'], 400);
             }
 
@@ -169,7 +184,7 @@ class Login extends Base
                 error_log('[LOGIN][enviarCodigoContato] Connected to DB');
 
                 // Verifica se já existe contato (evita envio para contatos já registrados)
-                $chkSql = $tipo === 'email' ? "LOWER(email) = LOWER(:contato)" : "regexp_replace(celular, '\\D', '', 'g') = :contato";
+                $chkSql = $tipo === 'email' ? "LOWER(email) = LOWER(:contato)" : "regexp_replace(telefone, '\\D', '', 'g') = :contato";
                 $chk = $con->prepare("SELECT id FROM vw_usuario_contatos WHERE " . $chkSql . " LIMIT 1");
                 $contatoParam = $tipo === 'email' ? $contato : preg_replace('/\D+/', '', $contato);
                 $chk->execute(['contato' => $contatoParam]);
@@ -212,8 +227,8 @@ class Login extends Base
                         if ($tipo === 'email' && isset($u['email']) && strtolower($u['email']) === strtolower($contatoParam)) {
                             return $this->SendJson($response, ['status' => false, 'msg' => 'Email já cadastrado'], 409);
                         }
-                        if ($tipo === 'celular' && isset($u['contatos']) && in_array($contatoParam, $u['contatos'])) {
-                            return $this->SendJson($response, ['status' => false, 'msg' => 'Celular já cadastrado'], 409);
+                        if ($tipo === 'celular' && isset($u['telefone']) && in_array($contatoParam, $u['contatos'])) {
+                            return $this->SendJson($response, ['status' => false, 'msg' => 'Telefone já cadastrado'], 409);
                         }
                     }
                 }
@@ -278,7 +293,7 @@ class Login extends Base
             $contato = trim($form['contato'] ?? '');
             $codigo = trim($form['codigo'] ?? '');
 
-            if (empty($tipo) || empty($contato) || empty($codigo) || !in_array($tipo, ['email', 'celular'])) {
+            if (empty($tipo) || empty($contato) || empty($codigo) || !in_array($tipo, ['email', 'telefone'])) {
                 return $this->SendJson($response, ['status' => false, 'msg' => 'Dados inválidos'], 400);
             }
 
@@ -419,21 +434,6 @@ class Login extends Base
             $loginLower = strtolower($login);
             $loginCel = preg_replace('/\D+/', '', $login);
 
-            $stmt = $con->prepare("
-                SELECT *
-                FROM vw_usuario_contatos
-                WHERE LOWER(email) = :email
-                   OR regexp_replace(celular, '\\D', '', 'g') = :celular
-                   OR cpf = :cpf
-                LIMIT 1
-            ");
-
-            $stmt->execute([
-                'email' => $loginLower,
-                'celular' => $loginCel,
-                'cpf' => $login
-            ]);
-
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if (!$user || !password_verify($senha, $user['senha'])) {
@@ -455,6 +455,8 @@ class Login extends Base
                 'id' => $user['id'],
                 'nome' => $user['nome'],
                 'email' => $user['email'],
+                'cpf' => $user['cpf'],
+                'telefone' => $user['telefone'],
                 'administrador' => (bool) ($user['administrador'] ?? false),
                 'ativo' => (bool) ($user['ativo'] ?? true)
             ];
