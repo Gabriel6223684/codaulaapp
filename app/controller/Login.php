@@ -3,7 +3,6 @@
 
 namespace app\controller;
 
-<<<<<<< Updated upstream
 use App\Database\Builder\UpdateQuery;
 use App\Database\Builder\SelectQuery;
 use App\Database\Builder\InsertQuery;
@@ -11,17 +10,11 @@ use App\Traits\Template;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use PDO;
-=======
-use app\database\builder\InsertQuery;
-use app\database\builder\SelectQuery;
-use app\database\builder\UpdateQuery;
->>>>>>> Stashed changes
 
 class Login extends Base
 {
     public function login($request, $response)
     {
-<<<<<<< Updated upstream
         return $this->getTwig()->render(
             $response,
             $this->setView('login'),
@@ -36,14 +29,9 @@ class Login extends Base
             $server = [
                 'php_sapi' => PHP_SAPI,
                 'time' => date('c')
-=======
-        try {
-            $dadosTemplate = [
-                'titulo' => 'Autenticação'
->>>>>>> Stashed changes
             ];
             return $this->getTwig()
-                ->render($response, $this->setView('login'), $dadosTemplate)
+                ->render($response, $this->setView('login'), [])
                 ->withHeader('Content-Type', 'text/html')
                 ->withStatus(200);
         } catch (\Exception $e) {
@@ -51,11 +39,8 @@ class Login extends Base
             die;
         }
     }
-<<<<<<< Updated upstream
 
     // Pré-cadastro de usuários
-=======
->>>>>>> Stashed changes
     public function precadastro($request, $response)
     {
         try {
@@ -109,7 +94,6 @@ class Login extends Base
             return $this->SendJson($response, ['status' => true, 'msg' => 'Restrição: ' . $e->getMessage(), 'id' => 0], 500);
         }
     }
-<<<<<<< Updated upstream
 
     // Envia código de verificação para um contato (email ou celular)
     public function enviarCodigoContato($request, $response)
@@ -404,72 +388,10 @@ class Login extends Base
                 ], 401);
             }
 
-=======
-    public function autenticar($request, $response)
-    {
-        try {
-            #Captura os dados do form
-            $form = $request->getParsedBody();
-            #Caso a posição login não exista, informa a ocorrencia de erro.
-            if (!isset($form['login']) || empty($form['login'])) {
-                return $this->SendJson($response, ['status' => false, 'msg' => 'Por favor informe o login', 'id' => 0], 403);
-            }
-            #Caso a posição login não exista, informa a ocorrencia de erro.
-            if (!isset($form['senha']) || empty($form['senha'])) {
-                return $this->SendJson($response, ['status' => false, 'msg' => 'Por favor informe o senha', 'id' => 0], 403);
-            }
-            $user = SelectQuery::select()
-                ->from('vw_usuario_contatos')
-                ->where('cpf', '=', $form['login'], 'or')
-                ->where('email', '=', $form['login'], 'or')
-                ->where('celular', '=', $form['login'], 'or')
-                ->where('whatsapp', '=', $form['login'])
-                ->fetch();
-            if (!isset($user) || empty($user) || count($user) <= 0) {
-                return $this->SendJson(
-                    $response,
-                    ['status' => false, 'msg' => 'Usuário ou senha inválidos!', 'id' => 0],
-                    403
-                );
-            }
-            if (!$user['ativo']) {
-                return $this->SendJson(
-                    $response,
-                    ['status' => false, 'msg' => 'Por enquanto você ainda não tem permissão de acessar o sistema!', 'id' => 0],
-                    403
-                );
-            }
-            if (!password_verify($form['senha'], $user['senha'])) {
-                return $this->SendJson(
-                    $response,
-                    ['status' => false, 'msg' => 'Usuário ou senha inválidos!', 'id' => 0],
-                    403
-                );
-            }
-
-            if (password_needs_rehash($user['senha'], PASSWORD_DEFAULT)) {
-                UpdateQuery::table('usuario')->set(['senha' => password_hash($form['senha'], PASSWORD_DEFAULT)])->where('id', '=', $user['id'])->update();
-            }
-
->>>>>>> Stashed changes
             $_SESSION['usuario'] = [
                 'id' => $user['id'],
                 'nome' => $user['nome'],
-<<<<<<< Updated upstream
                 'email' => $user['email']
-=======
-                'sobrenome' => $user['sobrenome'],
-                'cpf' => $user['cpf'],
-                'rg' => $user['rg'],
-                'ativo' => $user['ativo'],
-                'logado' => true,
-                'administrador' => $user['administrador'],
-                'celular' => $user['celular'],
-                'email' => $user['email'],
-                'whatsapp' => $user['whatsapp'],
-                'data_cadastro' => $user['data_cadastro'],
-                'data_alteracao' => $user['data_alteracao'],
->>>>>>> Stashed changes
             ];
 
             return $this->SendJson(
