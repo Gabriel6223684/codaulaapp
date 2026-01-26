@@ -6,17 +6,12 @@ use App\Database\Builder\UpdateQuery;
 use App\Database\Builder\SelectQuery;
 use App\Database\Builder\InsertQuery;
 use App\Traits\Template;
-
-
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use PDO;
 
 class Login extends Base
 {
-    // Renderiza a página de login
-    use Template;
-
     public function login($request, $response)
     {
         return $this->getTwig()->render(
@@ -39,7 +34,7 @@ class Login extends Base
             return $this->SendJson($response, ['status' => false, 'msg' => $e->getMessage()], 500);
         }
     }
-    
+
     // Pré-cadastro de usuários
     public function precadastro($request, $response)
     {
@@ -385,10 +380,6 @@ class Login extends Base
             return $this->SendJson($response, ['status' => false, 'msg' => $e->getMessage()], 500);
         }
     }
-
-    // Autenticação de login
-    use Template;
-
     public function autenticar($request, $response)
     {
         if (session_status() !== PHP_SESSION_ACTIVE) {
