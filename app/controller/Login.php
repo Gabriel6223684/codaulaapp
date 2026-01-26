@@ -1,7 +1,9 @@
+
 <?php
 
 namespace app\controller;
 
+<<<<<<< Updated upstream
 use App\Database\Builder\UpdateQuery;
 use App\Database\Builder\SelectQuery;
 use App\Database\Builder\InsertQuery;
@@ -9,11 +11,17 @@ use App\Traits\Template;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use PDO;
+=======
+use app\database\builder\InsertQuery;
+use app\database\builder\SelectQuery;
+use app\database\builder\UpdateQuery;
+>>>>>>> Stashed changes
 
 class Login extends Base
 {
     public function login($request, $response)
     {
+<<<<<<< Updated upstream
         return $this->getTwig()->render(
             $response,
             $this->setView('login'),
@@ -28,115 +36,80 @@ class Login extends Base
             $server = [
                 'php_sapi' => PHP_SAPI,
                 'time' => date('c')
+=======
+        try {
+            $dadosTemplate = [
+                'titulo' => 'Autenticação'
+>>>>>>> Stashed changes
             ];
-            return $this->SendJson($response, ['status' => true, 'msg' => 'pong', 'server' => $server]);
+            return $this->getTwig()
+                ->render($response, $this->setView('login'), $dadosTemplate)
+                ->withHeader('Content-Type', 'text/html')
+                ->withStatus(200);
         } catch (\Exception $e) {
-            return $this->SendJson($response, ['status' => false, 'msg' => $e->getMessage()], 500);
+            var_dump($e->getMessage());
+            die;
         }
     }
+<<<<<<< Updated upstream
 
     // Pré-cadastro de usuários
+=======
+>>>>>>> Stashed changes
     public function precadastro($request, $response)
     {
         try {
+            #Captura os dados do form
             $form = $request->getParsedBody();
-            // Fallback para quando o body vem como JSON
-            if (empty($form)) {
-                $json = json_decode((string) $request->getBody(), true);
-                $form = $json ?? [];
+            #Capturar os dados do usuário.
+            $dadosUsuario = [
+                'nome' => $form['nome'],
+                'sobrenome' => $form['sobrenome'],
+                'cpf' => $form['cpf'],
+                'rg' => $form['rg'],
+                'senha' => password_hash($form['senhaCadastro'], PASSWORD_DEFAULT)
+            ];
+            $IsInseted = InsertQuery::table('usuario')->save($dadosUsuario);
+            if (!$IsInseted) {
+                return $this->SendJson(
+                    $response,
+                    ['status' => false, 'msg' => 'Restrição: ' . $IsInseted, 'id' => 0],
+                    403
+                );
             }
-
-            // Log para depuração
-            $remoteIp = $request->getServerParams()['REMOTE_ADDR'] ?? 'unknown';
-            $ct = $request->getHeaderLine('Content-Type');
-            error_log("[LOGIN][precadastro] IP: $remoteIp CT: $ct");
-
-            // Validar campos obrigatórios
-            if (empty($form['nome']) || empty($form['email']) || empty($form['senhaCadastro'])) {
-                return $this->SendJson($response, [
-                    'status' => false,
-                    'msg' => 'Nome, E-mail e Senha são obrigatórios'
-                ], 400);
-            }
-
-            // Normalizar dados
-            $nome = trim($form['nome']);
-            $email = strtolower(trim($form['email']));
-            $cpf = preg_replace('/\D+/', '', $form['cpf'] ?? '');
-            $telefone = preg_replace('/\D+/', '', $form['telefone'] ?? $form['telefone'] ?? '');
-            $senha = $form['senhaCadastro'];
-
-            // Validar email
-            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                return $this->SendJson($response, [
-                    'status' => false,
-                    'msg' => 'E-mail inválido'
-                ], 400);
-            }
-
-            try {
-                $con = \app\database\Connection::connection();
-
-                // Verificar se já existe usuário com esse email
-                $stmt = $con->prepare("SELECT id FROM usuario WHERE LOWER(email) = :email LIMIT 1");
-                $stmt->execute(['email' => $email]);
-                if ($stmt->fetch()) {
-                    return $this->SendJson($response, [
-                        'status' => false,
-                        'msg' => 'E-mail já cadastrado'
-                    ], 409);
-                }
-
-                // Verificar CPF duplicado (se fornecido)
-                if (!empty($cpf)) {
-                    $stmt = $con->prepare("SELECT id FROM usuario WHERE cpf = :cpf LIMIT 1");
-                    $stmt->execute(['cpf' => $cpf]);
-                    if ($stmt->fetch()) {
-                        return $this->SendJson($response, [
-                            'status' => false,
-                            'msg' => 'CPF já cadastrado'
-                        ], 409);
-                    }
-                }
-
-                // Inserir novo usuário
-                $senhaHash = password_hash($senha, PASSWORD_DEFAULT);
-                $stmt = $con->prepare("
-                    INSERT INTO usuario (nome, email, cpf, celular, senha, ativo, administrador) 
-                    VALUES (:nome, :email, :cpf, :celular, :senha, :ativo, :admin)
-                ");
-
-                $stmt->execute([
-                    ':nome' => $nome,
-                    ':email' => $email,
-                    ':cpf' => !empty($cpf) ? $cpf : null,
-                    ':celular' => !empty($celular) ? $celular : null,
-                    ':senha' => $senhaHash,
-                    ':ativo' => 1,
-                    ':admin' => 0
-                ]);
-
-                error_log("[LOGIN][precadastro] Novo usuário criado: $email");
-
-                return $this->SendJson($response, [
-                    'status' => true,
-                    'msg' => 'Pré-cadastro realizado com sucesso! Você pode fazer login agora.'
-                ], 201);
-            } catch (\PDOException $e) {
-                error_log('[LOGIN][precadastro] Erro BD: ' . $e->getMessage());
-                return $this->SendJson($response, [
-                    'status' => false,
-                    'msg' => 'Erro ao salvar dados: ' . $e->getMessage()
-                ], 500);
-            }
+            #Captura o código do ultimo usuário cadastrado na tabela de usuário
+            $id = SelectQuery::select('id')->from('usuario')->order('id', 'desc')->fetch();
+            #Colocamos o ID do ultimo usuário cadastrado na varaivel $id_usuario.
+            $id_usuario = $id['id'];
+            #Inserimos o e-mail
+            $dadosContato = [
+                'id_usuario' => $id_usuario,
+                'tipo' => 'email',
+                'contato' => $form['email']
+            ];
+            InsertQuery::table('contato')->save($dadosContato);
+            $dadosContato = [];
+            #Inserimos o celular
+            $dadosContato = [
+                'id_usuario' => $id_usuario,
+                'tipo' => 'celular',
+                'contato' => $form['celular']
+            ];
+            InsertQuery::table('contato')->save($dadosContato);
+            $dadosContato = [];
+            #Inserimos o WhastaApp
+            $dadosContato = [
+                'id_usuario' => $id_usuario,
+                'tipo' => 'whatsapp',
+                'contato' => $form['whatsapp']
+            ];
+            InsertQuery::table('contato')->save($dadosContato);
+            return $this->SendJson($response, ['status' => true, 'msg' => 'Cadastro realizado com sucesso!', 'id' => $id_usuario], 201);
         } catch (\Exception $e) {
-            error_log('[LOGIN][precadastro] Erro geral: ' . $e->getMessage());
-            return $this->SendJson($response, [
-                'status' => false,
-                'msg' => 'Erro: ' . $e->getMessage()
-            ], 500);
+            return $this->SendJson($response, ['status' => true, 'msg' => 'Restrição: ' . $e->getMessage(), 'id' => 0], 500);
         }
     }
+<<<<<<< Updated upstream
 
     // Envia código de verificação para um contato (email ou celular)
     public function enviarCodigoContato($request, $response)
@@ -431,100 +404,81 @@ class Login extends Base
                 ], 401);
             }
 
+=======
+    public function autenticar($request, $response)
+    {
+        try {
+            #Captura os dados do form
+            $form = $request->getParsedBody();
+            #Caso a posição login não exista, informa a ocorrencia de erro.
+            if (!isset($form['login']) || empty($form['login'])) {
+                return $this->SendJson($response, ['status' => false, 'msg' => 'Por favor informe o login', 'id' => 0], 403);
+            }
+            #Caso a posição login não exista, informa a ocorrencia de erro.
+            if (!isset($form['senha']) || empty($form['senha'])) {
+                return $this->SendJson($response, ['status' => false, 'msg' => 'Por favor informe o senha', 'id' => 0], 403);
+            }
+            $user = SelectQuery::select()
+                ->from('vw_usuario_contatos')
+                ->where('cpf', '=', $form['login'], 'or')
+                ->where('email', '=', $form['login'], 'or')
+                ->where('celular', '=', $form['login'], 'or')
+                ->where('whatsapp', '=', $form['login'])
+                ->fetch();
+            if (!isset($user) || empty($user) || count($user) <= 0) {
+                return $this->SendJson(
+                    $response,
+                    ['status' => false, 'msg' => 'Usuário ou senha inválidos!', 'id' => 0],
+                    403
+                );
+            }
+            if (!$user['ativo']) {
+                return $this->SendJson(
+                    $response,
+                    ['status' => false, 'msg' => 'Por enquanto você ainda não tem permissão de acessar o sistema!', 'id' => 0],
+                    403
+                );
+            }
+            if (!password_verify($form['senha'], $user['senha'])) {
+                return $this->SendJson(
+                    $response,
+                    ['status' => false, 'msg' => 'Usuário ou senha inválidos!', 'id' => 0],
+                    403
+                );
+            }
+
+            if (password_needs_rehash($user['senha'], PASSWORD_DEFAULT)) {
+                UpdateQuery::table('usuario')->set(['senha' => password_hash($form['senha'], PASSWORD_DEFAULT)])->where('id', '=', $user['id'])->update();
+            }
+
+>>>>>>> Stashed changes
             $_SESSION['usuario'] = [
-                'logado' => true,
                 'id' => $user['id'],
                 'nome' => $user['nome'],
+<<<<<<< Updated upstream
                 'email' => $user['email']
+=======
+                'sobrenome' => $user['sobrenome'],
+                'cpf' => $user['cpf'],
+                'rg' => $user['rg'],
+                'ativo' => $user['ativo'],
+                'logado' => true,
+                'administrador' => $user['administrador'],
+                'celular' => $user['celular'],
+                'email' => $user['email'],
+                'whatsapp' => $user['whatsapp'],
+                'data_cadastro' => $user['data_cadastro'],
+                'data_alteracao' => $user['data_alteracao'],
+>>>>>>> Stashed changes
             ];
 
-            return $this->SendJson($response, [
-                'status' => true,
-                'msg' => 'Login realizado com sucesso'
-            ]);
+            return $this->SendJson(
+                $response,
+                ['status' => true, 'msg' => 'Seja bem-vindo de volta!', 'id' => $user['id']],
+                200
+            );
         } catch (\Exception $e) {
-            return $this->SendJson($response, [
-                'status' => false,
-                'msg' => 'Erro interno no servidor'
-            ], 500);
-        }
-    }
-
-    // Envia código de verificação para o e-mail informado (se existir)
-    public function recuperarSenha($request, $response)
-    {
-        try {
-            $form = $request->getParsedBody();
-            if (empty($form)) {
-                $json = json_decode((string) $request->getBody(), true);
-                $form = $json ?? [];
-            }
-            $email = $form['email'] ?? '';
-            if (empty($email)) {
-                return $this->SendJson($response, ['success' => false, 'message' => 'Email não informado'], 400);
-            }
-
-            $user = SelectQuery::select()->from('vw_usuario_contatos')->where('email', '=', $email)->fetch();
-
-            // Por segurança, retornamos a mesma mensagem mesmo que o e-mail não exista
-            if (!$user) {
-                return $this->SendJson($response, ['success' => true, 'message' => 'Se o e-mail existir, você receberá instruções para recuperar a senha.']);
-            }
-
-            $codigo = strval(rand(100000, 999999));
-            $now = date('Y-m-d H:i:s');
-            UpdateQuery::table('usuario')->set(['codigo_verificacao' => $codigo, 'codigo_gerado_em' => $now])->where('id', '=', $user['id'])->update();
-
-            error_log("[RECUPERAR SENHA] Código gerado para {$email}: {$codigo}");
-
-            // Retorna sucesso (código já foi salvo no BD)
-            // Em ambiente de desenvolvimento, retorna o código para teste
-            $isDev = php_sapi_name() === 'cli-server';
-            $resp = ['success' => true, 'message' => 'Se o e-mail existir, você receberá instruções para recuperar a senha.'];
-            if ($isDev) {
-                $resp['codigo_teste'] = $codigo; // Apenas para teste/desenvolvimento
-            }
-            return $this->SendJson($response, $resp);
-        } catch (\Exception $e) {
-            return $this->SendJson($response, ['success' => false, 'message' => 'Erro: ' . $e->getMessage()], 500);
-        }
-    }
-
-    // Valida o código e redefine a senha
-    public function validarCodigo($request, $response)
-    {
-        try {
-            $form = $request->getParsedBody();
-            if (empty($form)) {
-                $json = json_decode((string) $request->getBody(), true);
-                $form = $json ?? [];
-            }
-            $codigo = $form['codigo'] ?? '';
-            $senha = $form['senha'] ?? '';
-
-            if (empty($codigo) || empty($senha)) {
-                return $this->SendJson($response, ['success' => false, 'message' => 'Código ou senha não informados'], 400);
-            }
-
-            $user = SelectQuery::select()->from('usuario')->where('codigo_verificacao', '=', $codigo)->fetch();
-
-            if (!$user) {
-                return $this->SendJson($response, ['success' => false, 'message' => 'Código inválido'], 403);
-            }
-
-            // Verifica expiração (15 minutos)
-            $generated = $user['codigo_gerado_em'] ?? null;
-            if ($generated && (strtotime($generated) + 15 * 60) < time()) {
-                return $this->SendJson($response, ['success' => false, 'message' => 'Código expirado'], 403);
-            }
-            UpdateQuery::table('usuario')->set([
-                'senha' => password_hash($senha, PASSWORD_DEFAULT),
-                'codigo_verificacao' => null,
-                'codigo_gerado_em' => null
-            ])->where('id', '=', $user['id'])->update();
-            return $this->SendJson($response, ['success' => true, 'message' => 'Senha atualizada com sucesso']);
-        } catch (\Exception $e) {
-            return $this->SendJson($response, ['success' => false, 'message' => 'Erro: ' . $e->getMessage()], 500);
+            return $this->SendJson($response, ['status' => false, 'msg' => 'Restrição: ' . $e->getMessage(), 'id' => 0], 500);
         }
     }
 }
