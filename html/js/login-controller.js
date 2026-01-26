@@ -1,3 +1,4 @@
+
 const nodemailer = require("nodemailer");
 
 // CONFIGURAÇÃO DO SERVIDOR DE E-MAIL

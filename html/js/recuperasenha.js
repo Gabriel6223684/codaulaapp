@@ -1,3 +1,4 @@
+
 import { Requests } from '/public/html/js/modules/Requests.js';
 
 document.addEventListener('DOMContentLoaded', function () {

@@ -15,35 +15,16 @@ use PDO;
 class Login extends Base
 {
     // Renderiza a página de login
-    public function login( $request, $response):
+    use Template;
 
-    header('Content-Type: text/html; charset=UTF-8');
-    $json_data = file_get_contents('/login/autenticar', true);
-    $dados = json_decode($json_data, true);
-    
-    if ($dados) {
-        $email = trim($dados['email'] ?? '');
-        $senha = $dados['senha'] ?? '';
-    } else {
-        $email = '';
-        $senha = '';
-    }
-
+    public function login($request, $response)
     {
-        try {
-            return $this->getTwig()->render(
-                $response,
-                $this->setView('login'),
-                ['titulo' => 'Autenticação']
-            );
-        } catch (\Exception $e) {
-            return $this->SendJson($response, [
-                'status' => false,
-                'msg' => 'Erro ao carregar página'
-            ], 500);
-        }
+        return $this->getTwig()->render(
+            $response,
+            $this->setView('login'),
+            ['titulo' => 'Autenticação']
+        );
     }
-}
 
     // Health check endpoint to test server responses
     public function ping($request, $response)
@@ -413,9 +394,10 @@ class Login extends Base
         if (session_status() !== PHP_SESSION_ACTIVE) {
             session_start();
         }
+
         $data = $request->getParsedBody();
         if (empty($data)) {
-            $data = json_decode((string) $request->getBody(), true) ?? [];
+            $data = json_decode((string)$request->getBody(), true) ?? [];
         }
 
         $login = trim($data['login'] ?? '');
@@ -434,6 +416,21 @@ class Login extends Base
             $loginLower = strtolower($login);
             $loginCel = preg_replace('/\D+/', '', $login);
 
+            $stmt = $con->prepare("
+                SELECT *
+                FROM usuario
+                WHERE LOWER(email) = :login
+                   OR cpf = :cpf
+                   OR telefone = :tel
+                LIMIT 1
+            ");
+
+            $stmt->execute([
+                ':login' => $loginLower,
+                ':cpf'   => $loginCel,
+                ':tel'   => $loginCel
+            ]);
+
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if (!$user || !password_verify($senha, $user['senha'])) {
@@ -443,22 +440,11 @@ class Login extends Base
                 ], 401);
             }
 
-            if (!$user['ativo']) {
-                return $this->SendJson($response, [
-                    'status' => false,
-                    'msg' => 'Usuário inativo'
-                ], 403);
-            }
-
             $_SESSION['usuario'] = [
                 'logado' => true,
                 'id' => $user['id'],
                 'nome' => $user['nome'],
-                'email' => $user['email'],
-                'cpf' => $user['cpf'],
-                'telefone' => $user['telefone'],
-                'administrador' => (bool) ($user['administrador'] ?? false),
-                'ativo' => (bool) ($user['ativo'] ?? true)
+                'email' => $user['email']
             ];
 
             return $this->SendJson($response, [
