@@ -3,12 +3,9 @@
 
 namespace app\controller;
 
-use App\Database\Builder\UpdateQuery;
-use App\Database\Builder\SelectQuery;
-use App\Database\Builder\InsertQuery;
-use App\Traits\Template;
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use app\Database\Builder\UpdateQuery;
+use app\Database\Builder\SelectQuery;
+use app\Database\Builder\InsertQuery;
 use PDO;
 
 class Login extends Base

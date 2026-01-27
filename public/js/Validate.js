@@ -1,4 +1,3 @@
-
 class Validate {
     static form;
     static SetForm(id) {

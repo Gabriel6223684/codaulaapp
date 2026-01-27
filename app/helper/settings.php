@@ -1,5 +1,7 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 #Diretório raiz da aplicação web.
 define('ROOT', dirname(__file__, 3));

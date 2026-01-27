@@ -5,7 +5,8 @@
 <link href="https://cdn.datatables.net/responsive/3.0.7/css/responsive.bootstrap5.min.css" rel="stylesheet">
 <link href="https://cdn.datatables.net/staterestore/1.4.3/css/stateRestore.bootstrap5.min.css" rel="stylesheet">
 
-<div class="app-content-header">
+<div class="container mt-4">
+  <form id="form">
     <div class="container-fluid">
         <div class="row">
             <div class="col-sm-6">
@@ -18,47 +19,71 @@
                 </ol>
             </div>
         </div>
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <a href="/usuario/cadastro" class="btn btn-success">Cadastrar</a>
-                    </div>
-                    <div class="card-body">
-                        <table class="table table-striped table-hover table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>Código</th>
-                                    <th>Nome</th>
-                                    <th>Sobre nome</th>
-                                    <th>CPF</th>
-                                    <th>RG</th>
-                                    <th>Ação</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>1</td>
-                                    <td>Gabriel</td>
-                                    <td>Luiz</td>
-                                    <td>123</td>
-                                    <td>123</td>
-                                    <td>
-                                        <a href="/usuario/alterar/1" class="btn btn-warning">Alterar</a>
-                                        <button onclick="Deletar('1')" type="button"
-                                            class="btn btn-danger">Excluir</button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Lista de Empresas</h5>
+        <a href="/empresa/cadastro" class="btn btn-success">
+          <i class="fa-solid fa-plus"></i> Novo Cadastro
+        </a>
+      </div>
+      <div class="card-body">
+        <table class="table table-striped" id="tabela">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Nome completo</th>
+              <th>CPF</th>
+              <th>Email</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </div>
+  </form>
 </div>
 
-<script src="/js/listuser.js"></script>
+<!-- Modal Editar -->
+<div class="modal fade" id="modalEditar" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Editar Empresa</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="formEditar">
+          <input type="hidden" id="editId">
+          <div class="mb-3"><label>Nome</label><input type="text" id="editNome" class="form-control"></div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary" id="salvarEdicao">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Excluir -->
+<div class="modal fade" id="modalExcluir" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">Excluir empresa</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">Tem certeza que deseja excluir esta empresa?</div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-danger" id="confirmarExclusao">Excluir</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="/js/listaempresa.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/js/all.min.js"></script>
 
