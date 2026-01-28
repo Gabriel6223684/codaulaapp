@@ -26,6 +26,15 @@ class Empresa extends Base
             ->render($response, $this->setView('empresa'), $dadosTemplate)
             ->withHeader('Content-Type', 'text/html')
             ->withStatus(200);
+        try {
+        } catch (\Exception $e) {
+            $response->getBody()->write(json_encode([
+                'status' => false,
+                'msg' => $e->getMessage()
+            ]));
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+        }
+
     }
     public function listaempresa($request, $response)
     {
@@ -43,7 +52,8 @@ class Empresa extends Base
             0 => 'id',
             1 => 'nome',
             2 => 'email',
-            3 => 'cpf_cnpj'
+            3 => 'cpf_cnpj',
+            4 => 'senha'
         ];
         #Capturamos o nome do capo a ser ordenado.
         $orderField = $fields[$order];
@@ -54,7 +64,8 @@ class Empresa extends Base
         if (!is_null($term) && ($term !== '')) {
             $query->where('empresa.nome', 'ilike', "%{$term}%", 'or')
                 ->where('empresa.email', 'ilike', "%{$term}%", 'or')
-                ->where('empresa.cpf_cnpj', 'ilike', "%{$term}%");
+                ->where('empresa.cpf_cnpj', 'ilike', "%{$term}%")
+                ->where('empresa.senha', 'ilike', "%{$term}%");
         }
         $empresa = $query
             ->order($orderField, $orderType)
@@ -67,6 +78,7 @@ class Empresa extends Base
                 $value['nome'],
                 $value['cpf_cnpj'],
                 $value['email'],
+                $value['senha'],
                 "<button class='btn btn-warning'>Editar</button>
                 <button class='btn btn-danger'>Excluir</button>"
             ];
@@ -85,14 +97,14 @@ class Empresa extends Base
             ->withHeader('Content-Type', 'application/json')
             ->withStatus(200);
     }
-
     public function insert($request, $response)
     {
         $form = $request->getParsedBody();
         $dados = [
             'nome'          => $form['nome'],
             'cpf_cnpj'      => $form['cpf_cnpj'],
-            'email'         => $form['email']
+            'email'         => $form['email'],
+            'senha'         => $form['senha']
         ];
         try {
             $ok = InsertQuery::table('empresa')->save($dados);
@@ -120,6 +132,7 @@ class Empresa extends Base
         $nome = $form['nome'] ?? null;
         $cpf_cnpj = $form['cpf_cnpj'] ?? null;
         $email = $form['email'] ?? null;
+        $senha = $form['senha'] ?? null;
 
         if (!$id || !$nome || !$cpf_cnpj || !$email) {
             $response->getBody()->write(json_encode(['status' => false, 'msg' => 'Campos obrigatórios faltando']));
@@ -129,7 +142,8 @@ class Empresa extends Base
         $dados = [
             'nome' => $nome,
             'cpf_cnpj' => $cpf_cnpj,
-            'email' => $email
+            'email' => $email,
+            'senha' => $senha
         ];
 
         if (!empty($senha)) {
@@ -167,7 +181,7 @@ class Empresa extends Base
 
             $response->getBody()->write(json_encode([
                 'status' => $ok,
-                'msg' => $ok ? 'Empresa excluído' : 'Nenhum empresa encontrado'
+                'msg' => $ok ? 'Empresa excluída' : 'Nenhuma empresa encontrada'
             ]));
 
             return $response->withHeader('Content-Type', 'application/json');

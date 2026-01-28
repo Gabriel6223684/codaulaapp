@@ -31,7 +31,7 @@ class Connection
             // Carregando variáveis de ambiente para a conexão
             $host = getenv('DB_HOST') ?: 'localhost';
             $port = getenv('DB_PORT') ?: '5432';
-            $dbname = getenv('DB_NAME') ?: 'senac';
+            $dbname = getenv('DB_NAME') ?: 'development_db';
             $user = getenv('DB_USER') ?: 'senac';
             $password = getenv('DB_PASSWORD') ?: 'senac';
 

@@ -41,9 +41,10 @@ class Fornecedor extends Base
         $length = $form['length'];
         $fields = [
             0 => 'id',
-            1 => 'nome_completo',
+            1 => 'nome',
             2 => 'email',
-            3 => 'cpf'
+            4 => 'cpf',
+            3 => 'senha'
         ];
         #Capturamos o nome do capo a ser ordenado.
         $orderField = $fields[$order];
@@ -54,7 +55,8 @@ class Fornecedor extends Base
         if (!is_null($term) && ($term !== '')) {
             $query->where('fornecedor.nome', 'ilike', "%{$term}%", 'or')
                 ->where('fornecedor.email', 'ilike', "%{$term}%", 'or')
-                ->where('fornecedor.cpf_cnpj', 'ilike', "%{$term}%");
+                ->where('fornecedor.cpf_cnpj', 'ilike', "%{$term}%")
+                ->where('fornecedor.senha', 'ilike', "%{$term}%");
         }
         $fornecedor = $query
             ->order($orderField, $orderType)
@@ -67,6 +69,7 @@ class Fornecedor extends Base
                 $value['nome'],
                 $value['cpf_cnpj'],
                 $value['email'],
+                $value['senha'],
                 "<button class='btn btn-warning'>Editar</button>
                 <button class='btn btn-danger'>Excluir</button>"
             ];
@@ -92,7 +95,8 @@ class Fornecedor extends Base
         $dados = [
             'nome'          => $form['nome'],
             'cpf_cnpj'      => $form['cpf_cnpj'],
-            'email'         => $form['email']
+            'email'         => $form['email'],
+            'senha'         => $form['senha']
         ];
         try {
             $ok = InsertQuery::table('fornecedor')->save($dados);
@@ -118,7 +122,7 @@ class Fornecedor extends Base
 
         $id = $form['id'] ?? null;
         $nome = $form['nome'] ?? null;
-        $cpfcnpj = $form['cpfcnpj'] ?? null;
+        $cpfcnpj = $form['cpf_cnpj'] ?? null;
         $email = $form['email'] ?? null;
         $senha = $form['senha'] ?? null;
 

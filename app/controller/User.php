@@ -4,10 +4,11 @@ namespace app\controller;
 
 use app\database\builder\InsertQuery;
 use app\database\builder\SelectQuery;
+use app\database\builder\updateQuery;
+use app\database\builder\DeleteQuery;
 
 class User extends Base
 {
-
     public function lista($request, $response)
     {
         $dadosTemplate = [
@@ -18,6 +19,7 @@ class User extends Base
             ->withHeader('Content-Type', 'text/html')
             ->withStatus(200);
     }
+    
     public function cadastro($request, $response)
     {
         $dadosTemplate = [
@@ -28,6 +30,7 @@ class User extends Base
             ->withHeader('Content-Type', 'text/html')
             ->withStatus(200);
     }
+
     public function listuser($request, $response)
     {
         #Captura todas a variaveis de forma mais segura VARIAVEIS POST.
@@ -42,9 +45,12 @@ class User extends Base
         $length = $form['length'];
         $fields = [
             0 => 'id',
-            1 => 'nome_completo',
-            2 => 'email',
-            3 => 'cpf'
+            1 => 'nome',
+            2 => 'sobrenome',
+            3 => 'email',
+            4 => 'cpfcnpj',
+            5 => 'rg',
+            5 => 'senha'
         ];
         #Capturamos o nome do capo a ser ordenado.
         $orderField = $fields[$order];
@@ -53,9 +59,12 @@ class User extends Base
         $query = SelectQuery::select()
             ->from('usuario');
         if (!is_null($term) && ($term !== '')) {
-            $query->where('usuario.nome_completo', 'ilike', "%{$term}%", 'or')
+            $query->where('usuario.nome', 'ilike', "%{$term}%", 'or')
+                ->where('usuario.sobrenome', 'ilike', "%{$term}%", 'or')
                 ->where('usuario.email', 'ilike', "%{$term}%", 'or')
-                ->where('usuario.cpf', 'ilike', "%{$term}%");
+                ->where('usuario.cpfcnpj', 'ilike', "%{$term}%")
+                ->where('usuario.rg', 'ilike', "%{$term}%")
+                ->where('usuario.senha', 'ilike', "%{$term}%");
         }
         $users = $query
             ->order($orderField, $orderType)
@@ -65,9 +74,12 @@ class User extends Base
         foreach ($users as $key => $value) {
             $userData[$key] = [
                 $value['id'],
-                $value['nome_completo'],
-                $value['cpf'],
+                $value['nome'],
+                $value['sobrenome'],
                 $value['email'],
+                $value['cpf'],
+                $value['rg'],
+                $value['senha'],
                 "<button class='btn btn-warning'>Editar</button>
                 <button class='btn btn-danger'>Excluir</button>"
             ];
@@ -86,13 +98,17 @@ class User extends Base
             ->withHeader('Content-Type', 'application/json')
             ->withStatus(200);
     }
+
     public function insert($request, $response)
     {
         $form = $request->getParsedBody();
 
         $dados = [
-            'nome_completo' => $form['nome'],
-            'cpf'           => $form['cpfcnpj'],
+
+            'nome' => $form['nome'],
+            'sobrenome' => $form['sobrenome'],
+            'rg' => $form['rg'],
+            'cpfcnpj'           => $form['cpfcnpj'],
             'email'         => $form['email'],
             'senha'         => password_hash($form['senha'], PASSWORD_DEFAULT)
         ];
@@ -116,25 +132,31 @@ class User extends Base
             return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
     }
+
     public function editar($request, $response)
     {
         $form = $request->getParsedBody();
 
         $id = $form['id'] ?? null;
         $nome = $form['nome'] ?? null;
-        $cpfcnpj = $form['cpfcnpj'] ?? null;
+        $sobrenome = $form['sobrenome'] ?? null;
         $email = $form['email'] ?? null;
+        $cpfcnpj = $form['cpfcnpj'] ?? null;
+        $rg = $form['rg'] ?? null;
         $senha = $form['senha'] ?? null;
 
-        if (!$id || !$nome || !$cpfcnpj || !$email) {
+        if (!$id || !$nome || !$sobrenome || !$cpfcnpj || !$rg || !$email || !$senha) {
             $response->getBody()->write(json_encode(['status' => false, 'msg' => 'Campos obrigatórios faltando']));
             return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
         }
 
         $dados = [
-            'nome_completo' => $nome,
-            'cpf' => $cpfcnpj,
-            'email' => $email
+            'nome' => $nome,
+            'sobrenome' => $sobrenome,
+            'email' => $email,
+            'cpjcnpj' => $cpfcnpj,
+            'rg' => $rg,
+            'senha' => $senha
         ];
 
         if (!empty($senha)) {
@@ -157,6 +179,7 @@ class User extends Base
             return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
         }
     }
+
     public function excluir($request, $response, $args)
     {
         $id = $args['id'] ?? null;
