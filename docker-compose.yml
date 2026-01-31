@@ -45,7 +45,7 @@ services:
     volumes:
       - ./:/var/www/
 
-    command: >
+    command: >+
       sh -c "composer install --no-interaction &&
              composer dump-autoload -o &&
              php-fpm"

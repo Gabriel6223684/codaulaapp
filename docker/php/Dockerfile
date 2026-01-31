@@ -1,3 +1,4 @@
+
 # Define a imagem base do container
 # PHP 8.5.2 com PHP-FPM, baseada em Alpine Linux (leve e eficiente)
 FROM php:8.5.2-fpm-alpine3.23
@@ -20,10 +21,19 @@ RUN apk add --no-cache \
     tzdata               
 
 # Compila e instala extensões PHP nativas necessárias para a aplicação
-RUN docker-php-ext-install \
-    pdo_pgsql \      
-    intl \               
-    mbstring             
+RUN apk add --no-cache \
+    freetype-dev \
+    libjpeg-turbo-dev \
+    libpng-dev \
+    postgresql-dev \
+    icu-dev \
+    oniguruma-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install \
+    pdo_pgsql \
+    intl \
+    mbstring \
+    gd
 
 # Copia o arquivo de configuração customizado do PHP para o container
 # Ele será carregado automaticamente pelo PHP

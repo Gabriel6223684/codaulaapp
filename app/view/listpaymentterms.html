@@ -1,15 +1,15 @@
-{% extends "main.html" %}
 
-{% block main %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
 <div class="app-content-header">
     <div class="container-fluid">
         <div class="row">
             <div class="col-sm-6">
-                <h3 class="mb-0">{{titulo}}</h3>
+                <h3 class="mb-0">Lista</h3>
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-end">
-                    <li class="breadcrumb-item" aria-current="page"><a href="/home">Início</a></li>
+                    <li class="breadcrumb-item" aria-current="page"><a href="">Início</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Pesquisa de usuário</li>
                 </ol>
             </div>
@@ -18,7 +18,7 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <a href="/usuario/cadastro" class="btn btn-success">Cadastrar</a>
+                        <a href="/pagamento/cadastro" class="btn btn-success">Cadastrar</a>
                     </div>
                     <div class="card-body">
                         <table class="table table-striped table-hover table-bordered">
@@ -40,8 +40,8 @@
                                     <td>123</td>
                                     <td>123</td>
                                     <td>
-                                        <a href="/usuario/alterar/1" class="btn btn-warning">Alterar</a>
-                                        <button onclick="Deletar('1')" type="button"
+                                        <a href="/usuario/alterar" class="btn btn-warning">Alterar</a>
+                                        <button type="button"
                                             class="btn btn-danger">Excluir</button>
                                     </td>
                                 </tr>
@@ -54,9 +54,7 @@
     </div>
 </div>
 
-
-{% endblock %}
-{% block script %}
-{% include 'script.html' %}
-<script src="/js/listuser.js"></script>
-{% endblock %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+    crossorigin="anonymous"></script>
+<script src="/public/js/listpaymentterms.js"></script>
