@@ -1,61 +1,49 @@
-<aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
-    <div class="sidebar-brand">
-        <a href="./index.html" class="brand-link">
-            <img src="./assets/img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image opacity-75 shadow" />
-            <span class="brand-text fw-light">Minha empresa</span>
-        </a>
+<link rel="stylesheet" href="/public/css/sale.css">
+<aside class="sidebar">
+    <div class="logo-section">
+        <h1 class="logo">Valeu</h1>
+        <p class="slogan">Sua preferência<br>é a nossa maior<br>motivação.</p>
     </div>
-    <div class="sidebar-wrapper">
-        <nav class="mt-2">
-            <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="navigation"
-                aria-label="Main navigation" data-accordion="false" id="navigation">
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="bi bi-plus"></i>
-                        <p>
-                            Cadastros
-                            <i class="nav-arrow bi bi-chevron-right"></i>
-                        </p>
-                    </a>
-                    <ul class="nav nav-treeview">
-                        <li class="nav-item">
-                            <a href="/usuario/lista" class="nav-link">
-                                <i class="bi bi-person-badge-fill"></i>
-                                <p>Usuário</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/fornecedor/lista" class="nav-link">
-                                <i class="nav-icon bi bi-circle"></i>
-                                <p>Fornecedor</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="./widgets/cards.html" class="nav-link">
-                                <i class="nav-icon bi bi-circle"></i>
-                                <p>Cards</p>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="bi bi-plus"></i>
-                        <p>
-                            Movimento estoque
-                            <i class="nav-arrow bi bi-chevron-right"></i>
-                        </p>
-                    </a>
-                    <ul class="nav nav-treeview">
-                        <li class="nav-item">
-                            <a href="/venda/lista" class="nav-link">
-                                <i class="bi bi-person-badge-fill"></i>
-                                <p>Venda</p>
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-            </ul>
-        </nav>
+    <nav class="sidebar-nav">
+        <ul>
+            <li class="active">
+                <a href="./paymentterms.html">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Pagamentos</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="./listpaymentterms.html">
+                    <i class="fas fa-box"></i>
+                    <span>Lista de Pagamentos</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="./sale.html">
+                    <i class="fas fa-box"></i>
+                    <span>Produtos</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="#">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Relatórios</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+
+    <div class="sidebar-image">
+    </div>
+
+    <div class="sidebar-footer">
+        <div class="footer-logo">
+            <i class="fas fa-handshake"></i>
+            <span>GROUP</span>
+        </div>
     </div>
 </aside>

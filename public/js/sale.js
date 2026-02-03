@@ -181,24 +181,54 @@ document.addEventListener('DOMContentLoaded', function () {
     // Botão finalizar venda
     const finalizeButton = document.querySelector('.btn-finalize');
     if (finalizeButton) {
-        finalizeButton.addEventListener('click', function () {
+        finalizeButton.addEventListener('click', async function () {
             if (cart.length === 0) {
                 alert('Carrinho vazio! Adicione produtos antes de finalizar.');
                 return;
             }
 
             const total = document.querySelector('.total-amount').textContent;
-            const confirmation = confirm(`Finalizar venda no valor de ${total}?`);
+            const confirmation = confirm(`Finalizar venda no valor de ${total} via PIX (chave: )?`);
 
-            if (confirmation) {
-                alert('Venda finalizada com sucesso!');
-                cart = [];
-                discount = { type: 'valor', amount: 0 };
-                document.querySelector('.discount-value').value = '0';
-                updateCart();
+            if (!confirmation) return;
+
+            try {
+                // Monta os dados do pedido
+                const pedido = {
+                    cart,
+                    discount,
+                    paymentMethod: {
+                        type: 'pix',
+                        chave: ''
+                    },
+                    total
+                };
+
+                const response = await fetch('/sale/finalizar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(pedido)
+                });
+
+                const result = await response.json();
+
+                if (result.status) {
+                    alert(`Venda finalizada com sucesso! PIX enviado para a chave ${pedido.paymentMethod.chave}`);
+                    cart = [];
+                    discount = { type: 'valor', amount: 0 };
+                    document.querySelector('.discount-value').value = '0';
+                    updateCart();
+                } else {
+                    alert('Erro ao finalizar: ' + result.msg);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Erro ao finalizar a venda.');
             }
         });
     }
+
+
 
     // Botão cancelar venda
     const cancelButton = document.querySelector('.btn-cancel');
