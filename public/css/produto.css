@@ -1,0 +1,75 @@
+/* ================================
+   POSICIONAMENTO E LAYOUT
+   ================================ */
+
+/* Afasta do topo da página */
+.app-content-header {
+    padding-top: 60px;
+}
+
+/* Centraliza e controla largura */
+.app-content-header .container-fluid {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Card com espaçamento interno maior */
+.card-body {
+    padding: 2.5rem;
+}
+
+/* GRID MAIS RESPIRADO */
+.row {
+    row-gap: 1.5rem;
+}
+
+/* Inputs grandes e alinhados */
+.form-control,
+.form-select {
+    height: 60px;
+    font-size: 1rem;
+    border-radius: 10px;
+}
+
+/* Labels alinhadas */
+.form-floating > label {
+    padding: 1rem 0.75rem;
+}
+
+/* Textarea em fileira própria */
+textarea.form-control {
+    height: 150px;
+}
+
+/* Garante alinhamento bonito */
+.col-lg-3,
+.col-lg-4,
+.col-lg-6,
+.col-12 {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Subtítulos */
+h4 {
+    margin-top: 2.5rem;
+}
+
+/* Tabela afastada do form */
+.table {
+    margin-top: 2rem;
+}
+
+/* Afasta o conteúdo do topo da página */
+.app-content-header {
+    margin-top: 80px; /* ajuste: 60px, 100px, como preferir */
+}
+
+/* Afasta apenas o card principal */
+.card {
+    margin-top: 80px;
+}
+
+body {
+    padding-top: 20px;
+}
