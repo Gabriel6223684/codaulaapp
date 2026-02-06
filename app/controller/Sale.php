@@ -1,33 +1,27 @@
 <?php
+
 namespace app\controller;
 
 class Sale extends Base
 {
-    public function finalizar($request, $response)
+    public function cadastro($request, $response)
     {
-        $data = $request->getParsedBody();
-
-        // Validação
-        if (empty($data['cart']) || count($data['cart']) === 0) {
-            return $response->withJson(['status' => false, 'msg' => 'Carrinho vazio!'], 400);
-        }
-
-        if (!isset($data['paymentMethod']) || $data['paymentMethod']['type'] !== 'pix') {
-            return $response->withJson(['status' => false, 'msg' => 'Pagamento inválido!'], 400);
-        }
-
-        // Simula salvar venda no banco
-        $pedido = [
-            'cart' => $data['cart'],
-            'discount' => $data['discount'],
-            'paymentMethod' => $data['paymentMethod'],
-            'total' => $data['total'],
-            'data_hora' => date('Y-m-d H:i:s')
+        $dadosTemplate = [
+            'titulo' => 'Página inicial'
         ];
-
-        // Aqui você faria algo como:
-        // $this->db->table('sales')->insert($pedido);
-
-        return $response->withJson(['status' => true, 'msg' => 'Venda finalizada via PIX com sucesso!']);
+        return $this->getTwig()
+            ->render($response, $this->setView('sale'), $dadosTemplate)
+            ->withHeader('Content-Type', 'text/html')
+            ->withStatus(200);
+    }
+    public function lista($request, $response)
+    {
+        $dadosTemplate = [
+            'titulo' => 'Página inicial'
+        ];
+        return $this->getTwig()
+            ->render($response, $this->setView('listsale'), $dadosTemplate)
+            ->withHeader('Content-Type', 'text/html')
+            ->withStatus(200);
     }
 }

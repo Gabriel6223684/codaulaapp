@@ -1,55 +1,55 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>paymentterms</title>
-    <link rel="stylesheet" href="/public/css/paymentterms.css">
-    <link rel="stylesheet" href="/public/css/sale.css">
-</head>
-<body>
-    <div class="app-content-header">
+{% extends "main.html" %}
+{% block main %}
+<div class="app-content-header">
     <div class="container-fluid">
         <div class="row">
             <div class="col-sm-6">
-                <h3 class="mb-0">termos de Pagamentos</h3>
+                <h3 class="mb-0">{{titulo}}</h3>
             </div>
             <div class="col-sm-6">
                 <ol class="breadcrumb float-sm-end">
-                    <li class="breadcrumb-item" aria-current="page"><a href="./sale.html">Início</a></li>
+                    <li class="breadcrumb-item" aria-current="page"><a href="/home">Início</a></li>
                     <li class="breadcrumb-item" aria-current="page"><a href="/pagamento/lista">Pesquisa</a></li>
-                    <li class="breadcrumb-item active" aria-current="page"> Termos de Pagamentos</li>
+                    <li class="breadcrumb-item active" aria-current="page">{{titulo}}</li>
                 </ol>
             </div>
         </div>
         <div class="row">
             <form id="form">
-                <input type="text" class="acao" name="acao" id="acao" value="{{acao}}">
-                <input type="text" class="id" name="id" id="id" value="{{id}}">
-                <br>
-                <br>
+                <input type="text" name="acao" id="acao" value="{{acao}}">
+                <input type="text" name="id" id="id" value="{{id}}">
                 <div class="col-12">
                     <div class="card">
                         <div class="card-header">
-                            <a href="/app/view/listpaymentterms.html" class="btn btn-warning">Voltar</a>
+                            <a href="/pagamento/lista" class="btn btn-warning">Voltar</a>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-lg-6 col-md-6 col-md-12">
                                     <div class="form-floating">
                                         <select class="form-select" id="codigo" name="codigo">
-                                            <option selected>Selecione uma condição de pagamento</option>
-                                            <option value="01">Dinheiro: Pagamento em espécie.</option>
-                                            <option value="02">Cheque: Pagamento em cheque.</option>
-                                            <option value="03">Cartão de Crédito: Requer dados da operadora.</option>
-                                            <option value="04">Cartão de Débito: Requer dados da operadora.</option>
-                                            <option value="10">Vale Alimentação, 11 - Refeição, 12 - Presente, 13 -
+                                            <option {% if paymentTerms.codigo=='01' %}selected{% endif %} value="01">
+                                                Selecione uma condição de pagamento</option>
+                                            <option {% if paymentTerms.codigo=='02' %}selected{% endif %} value="02"
+                                                value="01">Dinheiro: Pagamento em espécie.</option>
+                                            <option {% if paymentTerms.codigo=='03' %}selected{% endif %} value="03"
+                                                value="02">Cheque: Pagamento em cheque.</option>
+                                            <option {% if paymentTerms.codigo=='04' %} selected{% endif %} value="04"
+                                                value="03">Cartão de Crédito: Requer dados da operadora.</option>
+                                            <option {% if paymentTerms.codigo=='10' %} selected{% endif %} value="10"
+                                                value="04">Cartão de Débito: Requer dados da operadora.</option>
+                                            <option {% if paymentTerms.codigo=='15' %}selected{% endif %} value="15"
+                                                value="10">Vale Alimentação, 11 - Refeição, 12 - Presente, 13 -
                                                 Combustível: Vales específicos.</option>
-                                            <option value="15">Boleto Bancário: Pagamento via boleto.</option>
-                                            <option value="17">PIX</option>
-                                            <option value="90">Sem pagamento: Para operações sem circulação financeira.
+                                            <option {% if paymentTerms.codigo=='17' %}selected{% endif %} value="17"
+                                                value="15">Boleto Bancário: Pagamento via boleto.</option>
+                                            <option {% if paymentTerms.codigo=='90' %}selected{% endif %} value="90"
+                                                value="17">PIX</option>
+                                            <option {% if paymentTerms.codigo=='99' %}selected{% endif %} value="99"
+                                                value="90">Sem pagamento: Para operações sem circulação financeira.
                                             </option>
-                                            <option value="99">Outros: Pagamentos não listados. </option>
+                                            <option {% if paymentTerms.codigo=='01' %}selected{% endif %} value="10">
+                                                Outros: Pagamentos não listados. </option>
                                         </select>
                                         <label for="codigo">Condição de pagamento EX: (Dinheiro)</label>
                                     </div>
@@ -57,8 +57,8 @@
                                 <div class="col-lg-6 col-md-6 col-md-12">
                                     <div class="form-floating mb-3">
                                         <input type="text" class="form-control" id="titulo" name="titulo"
-                                            placeholder="Ex: R$ 20,00">
-                                        <label for="titulo">Titulo condição pagamento EX: (R$ 20,00)</label>
+                                            placeholder="name@example.com">
+                                        <label for="titulo">Titulo condição pagamento EX: (Dinheiro)</label>
                                     </div>
                                 </div>
                             </div>
@@ -74,21 +74,21 @@
                                 <div class="col-lg-4 col-md-4 col-md-12">
                                     <div class="form-floating mb-3">
                                         <input type="text" class="form-control" id="parcela" name="parcela"
-                                            placeholder="Ex: 10">
+                                            placeholder="name@example.com">
                                         <label for="parcela">Quantidade de parcelas</label>
                                     </div>
                                 </div>
                                 <div class="col-lg-4 col-md-4 col-md-12">
                                     <div class="form-floating mb-3">
                                         <input type="text" class="form-control" id="intervalo" name="intervalo"
-                                            placeholder="Ex: 30 dias">
+                                            placeholder="name@example.com">
                                         <label for="intervalo">Intervalo em dias EX: (30 dias)</label>
                                     </div>
                                 </div>
                                 <div class="col-lg-4 col-md-4 col-md-12">
                                     <div class="form-floating mb-3">
                                         <input type="text" class="form-control" id="vencimento_incial_parcela"
-                                            name="vencimento_incial_parcela" placeholder="Ex: 20 dias">
+                                            name="vencimento_incial_parcela" placeholder="name@example.com">
                                         <label for="vencimento_incial_parcela">Altera a data de venc. parcela EX: (20
                                             dias)</label>
                                     </div>
@@ -112,10 +112,10 @@
                                         </thead>
                                         <tbody>
                                             <tr>
-                                                <td></td>
-                                                <td></td>
-                                                <td></td>
-                                                <td></td>
+                                                <td>1</td>
+                                                <td>1 X</td>
+                                                <td>30 (Dias)</td>
+                                                <td>5 (Dias)</td>
                                                 <td>
                                                     <button class="btn btn-danger">Excluir</button>
                                                 </td>
@@ -135,6 +135,9 @@
     </div>
 </div>
 
-<script type="module" src="/public/js/paymentterms.js"></script>
-</body>
-</html>
+{% endblock %}
+
+{% block script %}
+{% include 'script.html' %}
+<script type="module" src="/js/paymentterms.js"></script>
+{% endblock %}

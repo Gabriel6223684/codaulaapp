@@ -7,14 +7,15 @@
     }, 
     "authors": [
         {
-            "name": "WILTON WILL DE PAULO",
-            "email": "wiltonwilldepaulo@gmail.com"
+            "name": "Gabriel Luiz da SIlva",
+            "email": "gabrielgb.luiz000@gmail.com"
         }
     ],
     "require": {
         "slim/slim": "^4.15",
         "slim/psr7": "^1.7",
         "slim/twig-view": "^3.4",
-        "robmorgan/phinx": "^0.16.10"
+        "robmorgan/phinx": "^0.16.10",
+        "dompdf/dompdf": "^3.1"
     }
 }

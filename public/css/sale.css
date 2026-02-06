@@ -1,3 +1,4 @@
+
 /* ============================================
    RESET E CONFIGURAÇÕES GLOBAIS
    ============================================ */
@@ -68,7 +69,7 @@ body {
    ============================================ */
 .sidebar {
     width: var(--sidebar-width);
-    background: linear-gradient(165deg, #230044 0%, #0cad4f 50%, #0d0e0d 100%);
+    background: linear-gradient(165deg, #4A6FDC 0%, #2E4A9E 50%, #1B3570 100%);
     color: var(--white);
     display: flex;
     flex-direction: column;
@@ -218,7 +219,7 @@ body {
    HEADER
    ============================================ */
 .header {
-    background: linear-gradient(135deg, #3f07a8 0%, #09a337 100%);
+    background: linear-gradient(135deg, #5374E6 0%, #6B8AED 100%);
     color: var(--white);
     padding: 0 30px;
     height: var(--header-height);
@@ -1196,41 +1197,4 @@ button:disabled {
     .btn-add {
         display: none;
     }
-}
-
-.sidebar-nav {
-    margin-top: 30px;
-    padding: 0 20px;
-}
-
-.sidebar-nav ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.sidebar-nav li a {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 14px 16px;
-    border-radius: 12px;
-    color: #e5e7eb;
-    text-decoration: none;
-    font-weight: 500;
-    transition: all 0.25s ease;
-}
-
-.sidebar-nav li a i {
-    font-size: 18px;
-    width: 22px;
-    text-align: center;
-}
-
-.sidebar-nav li a:hover {
-    background: rgba(255, 255, 255, 0.12);
-    transform: translateX(4p);
 }

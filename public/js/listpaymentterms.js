@@ -29,6 +29,7 @@ function renderList() {
                 <td>${parcela.intervalo}</td>
                 <td>${parcela.vencimento}</td>
                 <td>
+                <a href="/usuario/alterar/1" class="btn btn-warning">Alterar</a>
                     <button class="btn btn-danger" data-term="${termIndex}" data-parcela="${pIndex}">Excluir</button>
                 </td>
             `;
