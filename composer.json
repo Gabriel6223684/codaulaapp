@@ -4,7 +4,7 @@
         "psr-4": {
             "app\\": "app/"
         }
-    }, 
+    },
     "authors": [
         {
             "name": "Gabriel Luiz da SIlva",
@@ -12,6 +12,7 @@
         }
     ],
     "require": {
+        "php": "^8.2 || ^8.3 || ^8.4",
         "slim/slim": "^4.15",
         "slim/psr7": "^1.7",
         "slim/twig-view": "^3.4",
