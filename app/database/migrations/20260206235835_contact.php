@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Phinx\Migration\AbstractMigration;
 
-final class PaymentTerms extends AbstractMigration
+final class Contact extends AbstractMigration
 {
     /**
      * Change Method.
@@ -19,12 +19,12 @@ final class PaymentTerms extends AbstractMigration
      */
     public function change(): void
     {
-        $table = $this->table('payment_terms', ['id' => false, 'primary_key' => ['id']]);
+        $table = $this->table('contact', ['id' => false, 'primary_key' => ['id']]);
         $table->addColumn('id', 'biginteger', ['identity' => true, 'null' => false])
-            ->addColumn('codigo', 'text', ['null' => true])
-            ->addColumn('titulo', 'text', ['null' => true])
-            ->addColumn('data_cadastro', 'datetime', ['null' => true, 'default' => 'CURRENT_TIMESTAMP'])
-            ->addColumn('data_atualizacao', 'datetime', ['null' => true, 'default' => 'CURRENT_TIMESTAMP'])
+            ->addColumn('id_usuario', 'biginteger', ['null' => true])
+            ->addColumn('tipo', 'text', ['null' => true])
+            ->addColumn('endereco_contato', 'text', ['null' => true])
+            ->addForeignKey('id_usuario', 'users', 'id', ['delete' => 'CASCADE', 'update' => 'NO ACTION'])
             ->create();
     }
 }
