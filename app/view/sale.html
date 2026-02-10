@@ -5,63 +5,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema Comércio - Gestão de Vendas</title>
-    <link rel="stylesheet" href="/public/css/sale.css">
+    <link rel="stylesheet" href="/css/sale.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
 <body>
-    <a href="./view/left_menu.html"></a>
     <!-- Sidebar Esquerda -->
     <aside class="sidebar">
         <div class="logo-section">
-            <h1 class="logo">Valeu</h1>
+            <h1 class="logo">Obrigado</h1>
             <p class="slogan">Sua preferência<br>é a nossa maior<br>motivação.</p>
         </div>
-        <nav class="sidebar-nav">
-            <ul>
-                <li class="active">
-                    <a href="./paymentterms.html">
-                        <i class="fas fa-shopping-cart"></i>
-                        <span>Pagamentos</span>
-                    </a>
-                </li>
-
-                <li>
-                    <a href="./listpaymentterms.html">
-                        <i class="fas fa-box"></i>
-                        <span>Lista de Pagamentos</span>
-                    </a>
-                </li>
-
-                <li>
-                    <a href="#">
-                        <i class="fas fa-chart-line"></i>
-                        <span>Relatórios</span>
-                    </a>
-                </li>
-
-                <li>
-                    <a href="./produto.html">
-                        <i class="fas fa-box"></i>
-                        <span>Produtos</span>
-                    </a>
-                </li>
-
-                <li>
-                    <a href="./listproduto.html">
-                        <i class="fas fa-box"></i>
-                        <span>Lista de Produtos</span>
-                    </a>
+            <ul class="nav sidebar-menu flex-column" data-lte-toggle="treeview" role="navigation"
+                aria-label="Main navigation" data-accordion="false" id="navigation">
+                <li class="nav-item">
+                    <ul class="nav nav-treeview">
+                        <li class="nav-item">
+                            <a href="/home" class="nav-link">
+                                <i class="bi bi-person-badge-fill"></i>
+                                <p>Voltar</p>
+                            </a>
+                        </li>
+                    </ul>
                 </li>
             </ul>
-        </nav>
+
         <div class="sidebar-image">
         </div>
 
         <div class="sidebar-footer">
             <div class="footer-logo">
                 <i class="fas fa-handshake"></i>
-                <span>GROUP</span>
+                <span>Culha</span>
             </div>
         </div>
     </aside>
@@ -74,19 +49,21 @@
                     <i class="fas fa-cash-register"></i>
                 </div>
                 <div class="system-info">
-                    <h2>Sistema 2.0</h2>
+                    <h2>Sistema Comércio Athos</h2>
                     <p>Gestão de Vendas</p>
                 </div>
             </div>
             <div class="header-center">
                 <div class="datetime">
-                    <!--barra para deixa a o calendario para fica mais facil-->
+
                     <span class="date">Sexta-Feira, 23 De Janeiro De 2026</span>
                 </div>
             </div>
             <div class="header-right">
                 <span class="operator-label">Operador</span>
-                <span class="operator-name">Beta</span>
+                <span class="operator-name">João Silva</span>
+                <button class="icon-btn"><i class="fas fa-user-circle"></i></button>
+                <button class="icon-btn"><i class="fas fa-sign-out-alt"></i></button>
             </div>
         </header>
 
@@ -266,7 +243,7 @@
             </aside>
         </div>
     </main>
-    <script defer type="module" src="/public/js/sale.js"></script>
+    <script defer type="module" src="/js/sale.js"></script>
 </body>
 
 </html>
