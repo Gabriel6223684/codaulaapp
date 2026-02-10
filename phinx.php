@@ -30,7 +30,7 @@ return
             'testing' => [
                 'adapter' => 'mysql',
                 'host' => 'localhost',
-                'name' => 'testing_db',
+                'name' => 'devlopment',
                 'user' => 'root',
                 'pass' => '',
                 'port' => '3306',

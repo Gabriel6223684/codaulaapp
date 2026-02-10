@@ -154,3 +154,10 @@ insertInstallmentButton.addEventListener('click', async () => {
 window.deleteInstallment = deleteInstallment;
 //Sempre que a pagina for carregada, carrega os dados das parcelas.
 await loadDataInstallments();
+
+document.addEventListener("keybown", (e) => {
+    //Fechamos o modal com a tecla f3
+    if (e.key === 'f8') {
+        alert('Fechando modal de pesquisa')
+    }
+});

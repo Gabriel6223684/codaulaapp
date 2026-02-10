@@ -1,3 +1,4 @@
+
 {% extends "main.html" %}
 {% block main %}
 <div class="app-content-header">
@@ -16,8 +17,9 @@
         </div>
         <div class="row">
             <form id="form">
-                <input type="text" name="acao" id="acao" value="{{acao}}">
-                <input type="text" name="id" id="id" value="{{id}}">
+                <input type="hidden" name="acao" id="acao" value="{{acao}}">
+                <input type="hidden" name="id" id="id" value="{{id}}">
+                <input type="hidden" name="id_parcelamento" id="id_parcelamento">
                 <div class="col-12">
                     <div class="card">
                         <div class="card-header">
@@ -25,47 +27,45 @@
                         </div>
                         <div class="card-body">
                             <div class="row">
-                                <div class="col-lg-6 col-md-6 col-md-12">
+                                <div class="col-lg-4 col-md-4 col-md-12">
                                     <div class="form-floating">
                                         <select class="form-select" id="codigo" name="codigo">
-                                            <option {% if paymentTerms.codigo=='01' %}selected{% endif %} value="01">
-                                                Selecione uma condição de pagamento</option>
-                                            <option {% if paymentTerms.codigo=='02' %}selected{% endif %} value="02"
-                                                value="01">Dinheiro: Pagamento em espécie.</option>
-                                            <option {% if paymentTerms.codigo=='03' %}selected{% endif %} value="03"
-                                                value="02">Cheque: Pagamento em cheque.</option>
-                                            <option {% if paymentTerms.codigo=='04' %} selected{% endif %} value="04"
-                                                value="03">Cartão de Crédito: Requer dados da operadora.</option>
-                                            <option {% if paymentTerms.codigo=='10' %} selected{% endif %} value="10"
-                                                value="04">Cartão de Débito: Requer dados da operadora.</option>
-                                            <option {% if paymentTerms.codigo=='15' %}selected{% endif %} value="15"
-                                                value="10">Vale Alimentação, 11 - Refeição, 12 - Presente, 13 -
-                                                Combustível: Vales específicos.</option>
-                                            <option {% if paymentTerms.codigo=='17' %}selected{% endif %} value="17"
-                                                value="15">Boleto Bancário: Pagamento via boleto.</option>
-                                            <option {% if paymentTerms.codigo=='90' %}selected{% endif %} value="90"
-                                                value="17">PIX</option>
-                                            <option {% if paymentTerms.codigo=='99' %}selected{% endif %} value="99"
-                                                value="90">Sem pagamento: Para operações sem circulação financeira.
+                                            <option selected>Selecione uma condição de pagamento</option>
+                                            <option {% if paymentTerms.codigo=='01' %} selected {% endif %} value="01">
+                                                Dinheiro: Pagamento em espécie.</option>
+                                            <option {% if paymentTerms.codigo=='02' %}selected{% endif %} value="02">
+                                                Cheque: Pagamento em cheque.</option>
+                                            <option {% if paymentTerms.codigo=='03' %}selected{% endif %} value="03">
+                                                Cartão de Crédito: Requer dados da operadora.</option>
+                                            <option {% if paymentTerms.codigo=='04' %}selected{% endif %} value="04">
+                                                Cartão de Débito: Requer dados da operadora.</option>
+                                            <option {% if paymentTerms.codigo=='10' %}selected{% endif %} value="10">
+                                                Vale Alimentação, 11 - Refeição, 12 - Presente, 13 - Combustível: Vales
+                                                específicos.</option>
+                                            <option {% if paymentTerms.codigo=='15' %}selected{% endif %} value="15">
+                                                Boleto Bancário: Pagamento via boleto.</option>
+                                            <option {% if paymentTerms.codigo=='17' %}selected{% endif %} value="17">PIX
                                             </option>
-                                            <option {% if paymentTerms.codigo=='01' %}selected{% endif %} value="10">
+                                            <option {% if paymentTerms.codigo=='90' %}selected{% endif %} value="90">Sem
+                                                pagamento: Para operações sem circulação financeira.</option>
+                                            <option {% if paymentTerms.codigo=='99' %}selected{% endif %} value="99">
                                                 Outros: Pagamentos não listados. </option>
                                         </select>
                                         <label for="codigo">Condição de pagamento EX: (Dinheiro)</label>
                                     </div>
                                 </div>
-                                <div class="col-lg-6 col-md-6 col-md-12">
+                                <div class="col-lg-4 col-md-4 col-md-12">
                                     <div class="form-floating mb-3">
                                         <input type="text" class="form-control" id="titulo" name="titulo"
-                                            placeholder="name@example.com">
+                                            placeholder="name@example.com" value="{{paymentTerms.titulo}}">
                                         <label for="titulo">Titulo condição pagamento EX: (Dinheiro)</label>
                                     </div>
                                 </div>
-                                <div class="col-lg-6 col-md-6 col-md-12">
+                                <div class="col-lg-4 col-md-4 col-md-12">
                                     <div class="form-floating mb-3">
                                         <input type="text" class="form-control" id="atalho" name="atalho"
-                                            placeholder="name@example.com">
-                                        <label for="atalho">Atalho teclado EX: (f6)</label>
+                                            placeholder="name@example.com" value="{{paymentTerms.atalho}}">
+                                        <label for="atalho">Atalho teclado EX: (F6)</label>
                                     </div>
                                 </div>
                             </div>
@@ -117,15 +117,9 @@
                                                 <th>Ação</th>
                                             </tr>
                                         </thead>
-                                        <tbody>
+                                        <tbody id="tbInstallments">
                                             <tr>
-                                                <td>1</td>
-                                                <td>1 X</td>
-                                                <td>30 (Dias)</td>
-                                                <td>5 (Dias)</td>
-                                                <td>
-                                                    <button class="btn btn-danger">Excluir</button>
-                                                </td>
+                                                <td class="text-center" colspan="5">Nenhuma parcela cadastrada</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -141,10 +135,9 @@
         </div>
     </div>
 </div>
-
 {% endblock %}
 
 {% block script %}
 {% include 'script.html' %}
-<script type="module" src="/js/paymentterms.js"></script>
+<script defer type="module" src="/js/paymentterms.js"></script>
 {% endblock %}

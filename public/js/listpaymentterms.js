@@ -1,59 +1,63 @@
-// listpaymentterms.js
 
-// Tabela onde vamos renderizar os termos
-const tableBody = document.querySelector('table tbody');
+const conf = {
+    paging: true,
+    lengthChange: true,
+    searching: true,
+    ordering: true,
+    info: true,
+    autoWidth: false,
+    responsive: true,
+    stateSave: true,
+    select: true,
+    processing: true,
+    serverSide: true,
+    language: {
+        url: 'https://cdn.datatables.net/plug-ins/1.11.5/i18n/pt-BR.json',
+        searchPlaceholder: 'Digite sua pesquisa...'
+    },
+    ajax: {
+        url: '/pagamento/listapaymentterms',
+        type: 'POST'
+    },
+    layout: {
+        topStart: 'search',
+        topEnd: 'pageLength',
+        bottomStart: 'info',
+        bottomEnd: 'paging'
+    },
+    // ✅ Aqui aplicamos a estilização após a tabela estar pronta
+    initComplete: function () {
+        setTimeout(() => {
+            // Remove o label "Pesquisar"
+            const label = document.querySelector('.dt-search label');
+            if (label) {
+                label.remove(); // Remove completamente do DOM
+            }
+            // Seleciona div que contém o campo de pesquisa
+            const searchDiv = document.querySelector('.row > div.dt-layout-start');
+            if (searchDiv) {
+                searchDiv.classList.remove('col-md-auto');
+                searchDiv.classList.add('col-lg-6', 'col-md-6', 'col-sm-12');
+            }
+            const divSearch = document.querySelector('.dt-search');
+            if (divSearch) {
+                divSearch.classList.add('w-100'); // ou w-100, w-75 etc.
+            }
 
-// Pega os termos do localStorage
-let paymentTerms = JSON.parse(localStorage.getItem('paymentTerms')) || [];
-
-// Função para renderizar tabela
-function renderList() {
-    tableBody.innerHTML = '';
-
-    if (paymentTerms.length === 0) {
-        tableBody.innerHTML = `
-            <tr>
-                <td colspan="7" style="text-align:center">Nenhum termo de pagamento cadastrado</td>
-            </tr>`;
-        return;
+            const input = document.querySelector('#dt-search-0');
+            if (input) {
+                input.classList.remove('form-control-sm'); // ou w-100, w-75 etc.
+                input.classList.add('form-control-md', 'w-100'); // ou w-100, w-75 etc.
+                // Remove margem e padding da esquerda
+                input.style.marginLeft = '0';
+                input.focus();
+            }
+            const pageLength = document.querySelector('#dt-length-0');
+            if (pageLength) {
+                pageLength.classList.add('form-select-md'); // ou form-select-sm, dependendo do tamanho desejado
+            }
+        }, 100);
     }
+};
 
-    paymentTerms.forEach((term, termIndex) => {
-        term.parcelas.forEach((parcela, pIndex) => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${term.codigo}</td>
-                <td>${term.titulo}</td>
-                <td>${parcela.parcela}x</td>
-                <td>${parcela.parcela}x</td>
-                <td>${parcela.intervalo}</td>
-                <td>${parcela.vencimento}</td>
-                <td>
-                <a href="/usuario/alterar/1" class="btn btn-warning">Alterar</a>
-                    <button class="btn btn-danger" data-term="${termIndex}" data-parcela="${pIndex}">Excluir</button>
-                </td>
-            `;
-            tableBody.appendChild(tr);
-        });
-    });
-}
-
-// Excluir parcela da lista
-tableBody.addEventListener('click', (e) => {
-    if (!e.target.classList.contains('btn-danger')) return;
-
-    const termIndex = e.target.dataset.term;
-    const parcelaIndex = e.target.dataset.parcela;
-
-    paymentTerms[termIndex].parcelas.splice(parcelaIndex, 1);
-
-    if (paymentTerms[termIndex].parcelas.length === 0) {
-        paymentTerms.splice(termIndex, 1);
-    }
-
-    localStorage.setItem('paymentTerms', JSON.stringify(paymentTerms));
-    renderList();
-});
-
-// Renderiza ao carregar a página
-renderList();
+const table = new $("#tabela").DataTable(conf);
