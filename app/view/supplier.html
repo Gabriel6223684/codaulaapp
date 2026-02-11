@@ -1,0 +1,81 @@
+{% extends "main.html" %}
+
+{% block main %}
+	<div class="app-content-header">
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-sm-6">
+					<h3 class="mb-0">{{titulo}}</h3>
+				</div>
+				<div class="col-sm-6">
+					<ol class="breadcrumb float-sm-end">
+						<li class="breadcrumb-item" aria-current="page">
+							<a href="/home">Início</a>
+						</li>
+						<li class="breadcrumb-item" aria-current="page">
+							<a href="/supplier/lista">Pesquisa de fornecedores</a>
+						</li>
+						<li class="breadcrumb-item active" aria-current="page">Cadastro e edição</li>
+					</ol>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-12">
+					<form id="meuFormulario" method="POST">
+						<input type="hidden" name="acao" id="acao" value="{{acao}}">
+						<input type="hidden" name="id" id="id" value="{{id}}">
+						<div class="card">
+							<div class="card-body">
+								<div class="row">
+									<div class="col-6 mb-3">
+										<label>Nome do Fornecedor</label>
+										<input type="text" name="nome" class="form-control" required value="{% if supplier %}{{ supplier.nome }}{% endif %}">
+									</div>
+
+									<div class="col-6 mb-3">
+										<label>CNPJ</label>
+										<input type="text" name="cnpj" class="form-control" value="{% if supplier %}{{ supplier.cnpj }}{% endif %}">
+									</div>
+
+									<div class="col-6 mb-3">
+										<label>Email</label>
+										<input type="email" name="email" class="form-control" value="{% if supplier %}{{ supplier.email }}{% endif %}">
+									</div>
+
+									<div class="col-6 mb-3">
+										<label>Telefone</label>
+										<input type="text" name="telefone" class="form-control" value="{% if supplier %}{{ supplier.telefone }}{% endif %}">
+									</div>
+
+									<div class="col-12 mb-3">
+										<label>Endereço</label>
+										<input type="text" name="endereco" class="form-control" value="{% if supplier %}{{ supplier.endereco }}{% endif %}">
+									</div>
+
+									<div class="col-6 mb-3">
+										<label>Ativo</label>
+										<select name="ativo" class="form-control">
+											<option value="1" {% if supplier and supplier.ativo == true %}selected{% endif %}>Sim</option>
+											<option value="0" {% if supplier and supplier.ativo == false %}selected{% endif %}>Não</option>
+										</select>
+									</div>
+								</div>
+							</div>
+
+							<div class="card-footer">
+								<a href="/supplier/lista" class="btn btn-warning">Voltar</a>
+								<button type="submit" class="btn btn-success">
+									Salvar
+								</button>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+{% endblock %}
+{% block script %}
+	{% include 'script.html' %}
+	<script src="/js/supplier.js"></script>
+{% endblock %}

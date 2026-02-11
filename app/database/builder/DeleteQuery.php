@@ -1,4 +1,3 @@
-
 <?php
 #Define o namespace da classe, organizando o código por pastas virtuais.
 namespace app\database\builder;

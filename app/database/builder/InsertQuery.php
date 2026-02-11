@@ -19,7 +19,7 @@ class InsertQuery
     {
         $fields  = implode(',', array_keys($this->FieldsAndValues));
         $placeHolder = ':' . implode(',:', array_keys($this->FieldsAndValues));
-        return "insert into $this->table ($fields) values ($placeHolder);";
+        return "insert into $this->table ($fields) values ($placeHolder)";
     }
     private function execute(string $query): bool
     {

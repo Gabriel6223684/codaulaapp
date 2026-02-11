@@ -7,58 +7,61 @@ use app\database\builder\InsertQuery;
 use app\database\builder\UpdateQuery;
 use app\database\builder\DeleteQuery;
 
-class User extends Base
+class Product extends Base
 {
     public function lista($request, $response)
     {
         try {
-            $usuarios = SelectQuery::select()->from('usuario')->order('id', 'desc')->fetchAll();
+            $products = SelectQuery::select()->from('product')->order('id', 'desc')->fetchAll();
             $dadosTemplate = [
-                'titulo' => 'Pesquisa de usuários',
-                'usuarios' => $usuarios
+                'titulo' => 'Pesquisa de produtos',
+                'products' => $products
             ];
             return $this->getTwig()
-                ->render($response, $this->setView('listuser'), $dadosTemplate)
+                ->render($response, $this->setView('listproduct'), $dadosTemplate)
                 ->withHeader('Content-Type', 'text/html')
                 ->withStatus(200);
         } catch (\Exception $e) {
             return $this->SendJson($response, ['status' => false, 'msg' => 'Erro: ' . $e->getMessage()], 500);
         }
     }
+
     public function cadastro($request, $response)
     {
         try {
             $dadosTemplate = [
                 'acao' => 'c',
-                'titulo' => 'Cadastro e edição'
+                'titulo' => 'Cadastro e edição de produtos'
             ];
             return $this->getTwig()
-                ->render($response, $this->setView('user'), $dadosTemplate)
+                ->render($response, $this->setView('product'), $dadosTemplate)
                 ->withHeader('Content-Type', 'text/html')
                 ->withStatus(200);
         } catch (\Exception $e) {
             return $this->SendJson($response, ['status' => false, 'msg' => 'Erro: ' . $e->getMessage()], 500);
         }
     }
+
     public function alterar($request, $response, $args)
     {
         try {
             $id = $args['id'];
-            $user = SelectQuery::select()->from('usuario')->where('id', '=', $id)->fetch();
+            $product = SelectQuery::select()->from('product')->where('id', '=', $id)->fetch();
             $dadosTemplate = [
                 'acao' => 'e',
                 'id' => $id,
-                'titulo' => 'Cadastro e edição',
-                'user' => $user
+                'titulo' => 'Cadastro e edição de produtos',
+                'product' => $product
             ];
             return $this->getTwig()
-                ->render($response, $this->setView('user'), $dadosTemplate)
+                ->render($response, $this->setView('product'), $dadosTemplate)
                 ->withHeader('Content-Type', 'text/html')
                 ->withStatus(200);
         } catch (\Exception $e) {
             return $this->SendJson($response, ['status' => false, 'msg' => 'Erro: ' . $e->getMessage()], 500);
         }
     }
+
     public function insert($request, $response)
     {
         try {
@@ -68,41 +71,69 @@ class User extends Base
                 return $this->SendJson($response, ['status' => false, 'msg' => 'Erro: corpo da requisição vazio ou inválido', 'id' => 0], 400);
             }
             
+            // Sanitize numeric fields: convert comma to dot for PostgreSQL
+            $normalizarPreco = function($valor) {
+                if (is_string($valor)) {
+                    $valor = str_replace('.', '', $valor);
+                    $valor = str_replace(',', '.', $valor);
+                }
+                return floatval($valor) ?? 0;
+            };
+            
             $FieldAndValues = [
                 'nome' => $form['nome'] ?? '',
-                'sobrenome' => $form['sobrenome'] ?? '',
-                'cpf' => $form['cpf'] ?? '',
-                'rg' => $form['rg'] ?? ''
+                'codigo' => $form['codigo'] ?? '',
+                'codigo_barra' => $form['codigo_barra'] ?? '',
+                'descricao' => $form['descricao'] ?? '',
+                'preco_custo' => $normalizarPreco($form['preco_custo'] ?? 0),
+                'preco_venda' => $normalizarPreco($form['preco_venda'] ?? 0),
+                'fornecedor_id' => $form['fornecedor_id'] ?? null,
+                'ativo' => $form['ativo'] ?? true
             ];
             
-            $IsSave = InsertQuery::table('usuario')->save($FieldAndValues);
+            $IsSave = InsertQuery::table('product')->save($FieldAndValues);
             if (!$IsSave) {
                 return $this->SendJson($response, ['status' => false, 'msg' => 'Erro ao inserir: ' . $IsSave, 'id' => 0], 403);
             }
-            $user = SelectQuery::select('id')->from('usuario')->order('id', 'desc')->fetch();
-            if (!$user || !isset($user['id'])) {
+            $product = SelectQuery::select('id')->from('product')->order('id', 'desc')->fetch();
+            if (!$product || !isset($product['id'])) {
                 return $this->SendJson($response, ['status' => false, 'msg' => 'Erro: não foi possível recuperar o ID do registro inserido', 'id' => 0], 500);
             }
-            return $this->SendJson($response, ['status' => true, 'msg' => 'Salvo com sucesso', 'id' => $user['id']], 201);
+            return $this->SendJson($response, ['status' => true, 'msg' => 'Salvo com sucesso', 'id' => $product['id']], 201);
         } catch (\Exception $e) {
             return $this->SendJson($response, ['status' => false, 'msg' => 'Restrição: ' . $e->getMessage(), 'id' => 0], 500);
         }
     }
+
     public function update($request, $response)
     {
         try {
             $form = $request->getParsedBody();
-            $id = $form['id'];
+            $id = $form['id'] ?? null;
             if (is_null($id) || empty($id)) {
                 return $this->SendJson($response, ['status' => false, 'msg' => 'Por favor informe o ID', 'id' => 0], 500);
             }
+            
+            // Sanitize numeric fields: convert comma to dot for PostgreSQL
+            $normalizarPreco = function($valor) {
+                if (is_string($valor)) {
+                    $valor = str_replace('.', '', $valor);
+                    $valor = str_replace(',', '.', $valor);
+                }
+                return floatval($valor) ?? 0;
+            };
+            
             $FieldAndValues = [
-                'nome' => $form['nome'],
-                'sobrenome' => $form['sobrenome'],
-                'cpf' => $form['cpf'],
-                'rg' => $form['rg']
+                'nome' => $form['nome'] ?? '',
+                'codigo' => $form['codigo'] ?? '',
+                'codigo_barra' => $form['codigo_barra'] ?? '',
+                'descricao' => $form['descricao'] ?? '',
+                'preco_custo' => $normalizarPreco($form['preco_custo'] ?? 0),
+                'preco_venda' => $normalizarPreco($form['preco_venda'] ?? 0),
+                'fornecedor_id' => $form['fornecedor_id'] ?? null,
+                'ativo' => $form['ativo'] ?? true
             ];
-            $IsUpdate = UpdateQuery::table('usuario')->set($FieldAndValues)->where('id', '=', $id)->update();
+            $IsUpdate = UpdateQuery::table('product')->set($FieldAndValues)->where('id', '=', $id)->update();
             if (!$IsUpdate) {
                 return $this->SendJson($response, ['status' => false, 'msg' => 'Restrição: ' . $IsUpdate, 'id' => 0], 403);
             }
@@ -111,6 +142,7 @@ class User extends Base
             return $this->SendJson($response, ['status' => false, 'msg' => 'Restrição: ' . $e->getMessage(), 'id' => 0], 500);
         }
     }
+
     public function deletar($request, $response, $args)
     {
         try {
@@ -118,11 +150,11 @@ class User extends Base
             if (is_null($id) || empty($id)) {
                 return $this->SendJson($response, ['status' => false, 'msg' => 'Por favor informe o ID', 'id' => 0], 400);
             }
-            $IsDelete = DeleteQuery::table('usuario')->where('id', '=', $id)->delete();
+            $IsDelete = DeleteQuery::table('product')->where('id', '=', $id)->delete();
             if (!$IsDelete) {
-                return $this->SendJson($response, ['status' => false, 'msg' => 'Erro ao deletar o usuário', 'id' => 0], 403);
+                return $this->SendJson($response, ['status' => false, 'msg' => 'Erro ao deletar o produto', 'id' => 0], 403);
             }
-            return $this->SendJson($response, ['status' => true, 'msg' => 'Usuário excluído com sucesso!', 'id' => $id], 200);
+            return $this->SendJson($response, ['status' => true, 'msg' => 'Produto excluído com sucesso!', 'id' => $id], 200);
         } catch (\Exception $e) {
             return $this->SendJson($response, ['status' => false, 'msg' => 'Restrição: ' . $e->getMessage(), 'id' => 0], 500);
         }
@@ -130,13 +162,13 @@ class User extends Base
     public function print($request, $response)
     {
         try {
-            $usuarios = SelectQuery::select()->from('usuario')->order('id', 'desc')->fetchAll();
+            $products = SelectQuery::select()->from('product')->order('id', 'desc')->fetchAll();
             $dadosTemplate = [
-                'titulo' => 'Relatório de Usuários',
-                'usuarios' => $usuarios
+                'titulo' => 'Relatório de Produtos',
+                'products' => $products
             ];
             return $this->getTwig()
-                ->render($response, $this->setView('printuser'), $dadosTemplate)
+                ->render($response, $this->setView('printproduct'), $dadosTemplate)
                 ->withHeader('Content-Type', 'text/html')
                 ->withStatus(200);
         } catch (\Exception $e) {

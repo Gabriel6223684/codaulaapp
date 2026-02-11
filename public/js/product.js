@@ -1,20 +1,20 @@
-// /js/paymentterms.js
+// /js/product.js
 
 document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('form');
+    const formulario = document.getElementById('meuFormulario');
 
-    if (!form) {
-        console.warn('Form #form not found');
+    if (!formulario) {
+        console.warn('Form #meuFormulario not found');
         return;
     }
 
-    form.addEventListener('submit', function(e) {
+    formulario.addEventListener('submit', function(e) {
         e.preventDefault();
-
+        
         const formData = new FormData(this);
         const payload = Object.fromEntries(formData.entries());
 
-        const url = payload.acao === 'c' ? '/pagamento/insert' : '/pagamento/update';
+        const url = payload.acao === 'c' ? '/product/insert' : '/product/update';
 
         console.log('Submitting to:', url, payload);
 
@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(data => {
             if (data.status === true) {
-                alert('Condição de pagamento salva com sucesso!');
+                alert('Produto salvo com sucesso!');
                 window.location.replace('/sale');
             } else {
                 alert("Erro: " + data.msg);

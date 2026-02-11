@@ -1,14 +1,14 @@
-// /js/listpaymentterms.js
+// /js/listsupplier.js
 async function Deletar(id) {
-    if (!confirm('Deseja realmente excluir esta condição de pagamento?')) return;
+    if (!confirm('Deseja realmente excluir este fornecedor?')) return;
 
     try {
-        const response = await fetch(`/pagamento/deletar/${id}`, {
+        const response = await fetch(`/supplier/deletar/${id}`, {
             method: 'DELETE'
         });
 
         if (response.ok) {
-            location.reload(); 
+            location.reload();
         } else {
             alert('Erro ao excluir.');
         }

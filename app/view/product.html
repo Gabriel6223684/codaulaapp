@@ -1,0 +1,90 @@
+{% extends "main.html" %}
+
+{% block main %}
+	<div class="app-content-header">
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-sm-6">
+					<h3 class="mb-0">{{titulo}}</h3>
+				</div>
+				<div class="col-sm-6">
+					<ol class="breadcrumb float-sm-end">
+						<li class="breadcrumb-item" aria-current="page">
+							<a href="/home">Início</a>
+						</li>
+						<li class="breadcrumb-item" aria-current="page">
+							<a href="/product/lista">Pesquisa de produtos</a>
+						</li>
+						<li class="breadcrumb-item active" aria-current="page">Cadastro e edição</li>
+					</ol>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-12">
+					<form id="meuFormulario" method="POST">
+						<input type="hidden" name="acao" value="{{ acao }}">
+						{% if acao == 'e' %}<input type="hidden" name="id" value="{{ id }}">{% endif %}
+						<div class="card">
+							<div class="card-body">
+								<div class="row">
+									<div class="col-6 mb-3">
+										<label>Nome do Produto</label>
+										<input type="text" name="nome" class="form-control" required value="{% if product %}{{ product.nome }}{% endif %}">
+									</div>
+
+									<div class="col-6 mb-3">
+										<label>Código</label>
+										<input type="text" name="codigo" class="form-control" value="{% if product %}{{ product.codigo }}{% endif %}">
+									</div>
+
+									<div class="col-6 mb-3">
+										<label>Código de Barras</label>
+										<input type="text" name="codigo_barra" class="form-control" value="{% if product %}{{ product.codigo_barra }}{% endif %}">
+									</div>
+
+									<div class="col-6 mb-3">
+										<label>Descrição</label>
+										<input type="text" name="descricao" class="form-control" value="{% if product %}{{ product.descricao }}{% endif %}">
+									</div>
+
+									<div class="col-6 mb-3">
+										<label>Preço de Custo</label>
+										<input type="number" step="0.01" name="preco_custo" class="form-control" value="{% if product %}{{ product.preco_custo }}{% endif %}">
+									</div>
+
+									<div class="col-6 mb-3">
+										<label>Preço de Venda</label>
+										<input type="number" step="0.01" name="preco_venda" class="form-control" value="{% if product %}{{ product.preco_venda }}{% endif %}">
+									</div>
+
+									<div class="col-6 mb-3">
+										<label>Id do Fornecedor</label>
+										<input type="number" name="fornecedor_id" class="form-control" value="{% if product %}{{ product.fornecedor_id }}{% endif %}">
+									</div>
+
+									<div class="col-6 mb-3">
+										<label>Ativo</label>
+										<select name="ativo" class="form-control">
+											<option value="1" {% if product and product.ativo == true %}selected{% endif %}>Sim</option>
+											<option value="0" {% if product and product.ativo == false %}selected{% endif %}>Não</option>
+										</select>
+									</div>
+								</div>
+							</div>
+
+							<div class="card-footer">
+								<button type="submit" class="btn btn-success">
+									Salvar
+								</button>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+{% endblock %}
+{% block script %}
+	{% include 'script.html' %}
+	<script src="/js/product.js"></script>
+{% endblock %}

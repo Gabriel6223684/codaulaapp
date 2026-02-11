@@ -1,4 +1,3 @@
-
 <?php
 
 namespace app\controller;
@@ -12,13 +11,19 @@ class PaymentTerms extends Base
 {
     public function lista($request, $response)
     {
-        $templaData = [
-            'titulo' => 'Lista de termos de pagamento'
-        ];
-        return $this->getTwig()
-            ->render($response, $this->setView('listpaymentterms'), $templaData)
-            ->withHeader('Content-Type', 'text/html')
-            ->withStatus(200);
+        try {
+            $paymentTerms = SelectQuery::select()->from('payment_terms')->order('id', 'desc')->fetchAll();
+            $templaData = [
+                'titulo' => 'Lista de termos de pagamento',
+                'paymentTerms' => $paymentTerms
+            ];
+            return $this->getTwig()
+                ->render($response, $this->setView('listpaymentterms'), $templaData)
+                ->withHeader('Content-Type', 'text/html')
+                ->withStatus(200);
+        } catch (\Exception $e) {
+            return $this->SendJson($response, ['status' => false, 'msg' => 'Erro: ' . $e->getMessage()], 500);
+        }
     }
     public function cadastro($request, $response)
     {
@@ -221,5 +226,37 @@ class PaymentTerms extends Base
             'data' => $clienteData
         ];
         return $this->SendJson($response, $data, 200);
+    }
+    public function deletar($request, $response, $args)
+    {
+        try {
+            $id = $args['id'];
+            if (is_null($id) || empty($id)) {
+                return $this->SendJson($response, ['status' => false, 'msg' => 'Por favor informe o ID', 'id' => 0], 400);
+            }
+            $IsDelete = DeleteQuery::table('payment_terms')->where('id', '=', $id)->delete();
+            if (!$IsDelete) {
+                return $this->SendJson($response, ['status' => false, 'msg' => 'Erro ao deletar a condição de pagamento', 'id' => 0], 403);
+            }
+            return $this->SendJson($response, ['status' => true, 'msg' => 'Condição de pagamento excluída com sucesso!', 'id' => $id], 200);
+        } catch (\Exception $e) {
+            return $this->SendJson($response, ['status' => false, 'msg' => 'Restrição: ' . $e->getMessage(), 'id' => 0], 500);
+        }
+    }
+    public function print($request, $response)
+    {
+        try {
+            $paymentTerms = SelectQuery::select()->from('payment_terms')->order('id', 'desc')->fetchAll();
+            $dadosTemplate = [
+                'titulo' => 'Relatório de Condições de Pagamento',
+                'paymentTerms' => $paymentTerms
+            ];
+            return $this->getTwig()
+                ->render($response, $this->setView('printpaymentterms'), $dadosTemplate)
+                ->withHeader('Content-Type', 'text/html')
+                ->withStatus(200);
+        } catch (\Exception $e) {
+            return $this->SendJson($response, ['status' => false, 'msg' => 'Erro: ' . $e->getMessage()], 500);
+        }
     }
 }

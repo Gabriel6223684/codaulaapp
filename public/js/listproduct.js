@@ -1,9 +1,9 @@
-// /js/listpaymentterms.js
+// /js/listproduct.js
 async function Deletar(id) {
-    if (!confirm('Deseja realmente excluir esta condição de pagamento?')) return;
+    if (!confirm('Deseja realmente excluir este produto?')) return;
 
     try {
-        const response = await fetch(`/pagamento/deletar/${id}`, {
+        const response = await fetch(`/product/deletar/${id}`, {
             method: 'DELETE'
         });
 

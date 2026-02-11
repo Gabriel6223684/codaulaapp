@@ -1,6 +1,3 @@
-
-// Sistema de Vendas - JavaScript
-
 // Atualizar relógio em tempo real
 function updateClock() {
     const now = new Date();
@@ -30,73 +27,9 @@ function updateClock() {
         dateElement.textContent = `${dayName}, ${day} De ${month} De ${year}`;
     }
 }
-
 // Atualizar a cada segundo
 setInterval(updateClock, 1000);
 updateClock();
-
-// Gerenciamento do carrinho
-let cart = [];
-let paymentMethod = 'dinheiro';
-let discount = { type: 'valor', amount: 0 };
-
-// Adicionar produto ao carrinho
-function addToCart(code, description, price) {
-    const existingItem = cart.find(item => item.code === code);
-
-    if (existingItem) {
-        existingItem.quantity += 1;
-    } else {
-        cart.push({
-            code: code,
-            description: description,
-            price: price,
-            quantity: 1
-        });
-    }
-
-    updateCart();
-}
-
-// Atualizar visualização do carrinho
-function updateCart() {
-    const cartEmpty = document.querySelector('.cart-empty');
-
-    if (cart.length === 0) {
-        cartEmpty.style.display = 'block';
-    } else {
-        cartEmpty.style.display = 'none';
-        // Aqui você pode adicionar a lógica para mostrar os itens do carrinho
-    }
-
-    updateTotals();
-}
-
-// Calcular e atualizar totais
-function updateTotals() {
-    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-
-    let discountAmount = 0;
-    if (discount.type === 'valor') {
-        discountAmount = discount.amount;
-    } else {
-        discountAmount = (subtotal * discount.amount) / 100;
-    }
-
-    const total = subtotal - discountAmount;
-
-    const subtotalElement = document.querySelector('.subtotal .amount');
-    const totalElement = document.querySelector('.total-amount');
-
-    if (subtotalElement) {
-        subtotalElement.textContent = `R$ ${subtotal.toFixed(2).replace('.', ',')}`;
-    }
-
-    if (totalElement) {
-        totalElement.textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
-    }
-}
-
 // Event Listeners para botões de adicionar
 document.addEventListener('DOMContentLoaded', function () {
     // Botões de adicionar produto
@@ -181,54 +114,24 @@ document.addEventListener('DOMContentLoaded', function () {
     // Botão finalizar venda
     const finalizeButton = document.querySelector('.btn-finalize');
     if (finalizeButton) {
-        finalizeButton.addEventListener('click', async function () {
+        finalizeButton.addEventListener('click', function () {
             if (cart.length === 0) {
                 alert('Carrinho vazio! Adicione produtos antes de finalizar.');
                 return;
             }
 
             const total = document.querySelector('.total-amount').textContent;
-            const confirmation = confirm(`Finalizar venda no valor de ${total} via PIX (chave: )?`);
+            const confirmation = confirm(`Finalizar venda no valor de ${total}?`);
 
-            if (!confirmation) return;
-
-            try {
-                // Monta os dados do pedido
-                const pedido = {
-                    cart,
-                    discount,
-                    paymentMethod: {
-                        type: 'pix',
-                        chave: ''
-                    },
-                    total
-                };
-
-                const response = await fetch('/sale/finalizar', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(pedido)
-                });
-
-                const result = await response.json();
-
-                if (result.status) {
-                    alert(`Venda finalizada com sucesso! PIX enviado para a chave ${pedido.paymentMethod.chave}`);
-                    cart = [];
-                    discount = { type: 'valor', amount: 0 };
-                    document.querySelector('.discount-value').value = '0';
-                    updateCart();
-                } else {
-                    alert('Erro ao finalizar: ' + result.msg);
-                }
-            } catch (err) {
-                console.error(err);
-                alert('Erro ao finalizar a venda.');
+            if (confirmation) {
+                alert('Venda finalizada com sucesso!');
+                cart = [];
+                discount = { type: 'valor', amount: 0 };
+                document.querySelector('.discount-value').value = '0';
+                updateCart();
             }
         });
     }
-
-
 
     // Botão cancelar venda
     const cancelButton = document.querySelector('.btn-cancel');
@@ -250,49 +153,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 });
-
-// Filtrar produtos na tabela
-function filterProducts(searchTerm) {
-    const rows = document.querySelectorAll('.products-table tbody tr');
-    let visibleCount = 0;
-
-    rows.forEach(row => {
-        const code = row.cells[0].textContent.toLowerCase();
-        const description = row.cells[1].textContent.toLowerCase();
-
-        if (code.includes(searchTerm) || description.includes(searchTerm)) {
-            row.style.display = '';
-            visibleCount++;
-        } else {
-            row.style.display = 'none';
-        }
-    });
-
-    // Atualizar contador de produtos
-    const productCount = document.querySelector('.product-count');
-    if (productCount) {
-        productCount.textContent = `${visibleCount} produtos`;
-    }
-}
-
-// Atualizar estilos dos inputs de desconto
-function updateInputStyles() {
-    const inputRs = document.querySelector('.discount-input-rs');
-    const inputPercent = document.querySelector('.discount-input-percent');
-
-    if (discount.type === 'valor') {
-        inputRs.style.borderColor = 'var(--primary-blue)';
-        inputRs.style.background = 'var(--white)';
-        inputPercent.style.borderColor = 'var(--gray-300)';
-        inputPercent.style.background = 'var(--gray-50)';
-    } else {
-        inputPercent.style.borderColor = 'var(--primary-blue)';
-        inputPercent.style.background = 'var(--white)';
-        inputRs.style.borderColor = 'var(--gray-300)';
-        inputRs.style.background = 'var(--gray-50)';
-    }
-}
-
 // Atalhos de teclado
 document.addEventListener('keydown', function (e) {
     // F2 - Focar no campo de busca
@@ -300,20 +160,17 @@ document.addEventListener('keydown', function (e) {
         e.preventDefault();
         document.querySelector('.search-input')?.focus();
     }
-
     // F9 - Finalizar venda
     if (e.key === 'F9') {
         e.preventDefault();
         document.querySelector('.btn-finalize')?.click();
     }
-
     // Esc - Cancelar venda
     if (e.key === 'Escape') {
         e.preventDefault();
         document.querySelector('.btn-cancel')?.click();
     }
 });
-
 // Feedback visual para cliques
 document.addEventListener('click', function (e) {
     if (e.target.matches('button')) {
@@ -321,4 +178,80 @@ document.addEventListener('click', function (e) {
     }
 });
 
-console.log('Sistema de Vendas - Carregado com sucesso!');
+document.addEventListener('keydown', (e) => {
+    //Fechamos o modal com a tecla F3
+    if (e.key === 'F8') {
+        const myModalEl = document.getElementById('pesquisaProdutoModal');
+        const modal = bootstrap.Modal.getInstance(myModalEl);
+        modal.hide();
+    }
+});
+
+$("#pesquisa").select2({
+    theme: "bootstrap-5",
+    placeholder: "Selecione um produto",
+    ajax: {
+        url: "/produto/listproductdata",
+        type: "POST",
+        delay: 250
+    }
+});
+
+// Event listener para botão "Inserir" (F9) - adicionar item ao carrinho
+document.addEventListener('DOMContentLoaded', function () {
+    const insertButton = document.getElementById('insertItemButton');
+    if (insertButton) {
+        insertButton.addEventListener('click', function () {
+            const productSelect = document.getElementById('pesquisa');
+            const quantityInput = document.getElementById('quantidade');
+            const saleIdInput = document.getElementById('id');
+
+            const productId = productSelect?.value;
+            const quantity = parseInt(quantityInput?.value || 1);
+            const saleId = parseInt(saleIdInput?.value || 0);
+
+            if (!productId || productId === '') {
+                alert('Selecione um produto antes de adicionar');
+                return;
+            }
+
+            // Get price from select2 selected option
+            const selectedOption = productSelect.selectedOptions[0];
+            const priceText = selectedOption?.textContent || '';
+            const priceMatch = priceText.match(/R\$\s*([\d,\.]+)/);
+            const preco = priceMatch ? parseFloat(priceMatch[1].replace(',', '.')) : 0;
+
+            const payload = {
+                sale_id: saleId,
+                product_id: parseInt(productId),
+                quantidade: quantity,
+                preco_unitario: preco
+            };
+
+            fetch('/venda/insertitem', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(r => r.text())
+            .then(t => {
+                const m = t.match(/\{[\s\S]*\}/);
+                if (m) return JSON.parse(m[0]);
+                throw new Error('Nenhum JSON encontrado');
+            })
+            .then(data => {
+                if (data.status === true) {
+                    alert('Produto adicionado ao carrinho!');
+                    productSelect.value = '';
+                    productSelect.trigger('change');
+                    location.reload();
+                } else {
+                    alert("Erro: " + data.msg);
+                }
+            })
+            .catch(error => {
+                alert("Erro ao adicionar: " + error.message);
+            });
+        });
+    }
+});
