@@ -1,0 +1,72 @@
+{% extends "main.html" %}
+
+{% block main %}
+	<div class="app-content-header">
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-sm-6">
+					<h3 class="mb-0">{{titulo}}</h3>
+				</div>
+				<div class="col-sm-6">
+					<ol class="breadcrumb float-sm-end">
+						<li class="breadcrumb-item" aria-current="page">
+							<a href="/home">Início</a>
+						</li>
+						<li class="breadcrumb-item" aria-current="page">
+							<a href="/empresa/lista">Pesquisa de empresa</a>
+						</li>
+						<li class="breadcrumb-item active" aria-current="page">Cadastro e edição</li>
+					</ol>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-12">
+					<form id="meuFormulario" method="POST">
+						<input type="hidden" name="acao" value="{{ acao }}">
+						{% if acao == 'e' %}<input type="hidden" name="id" value="{{ id }}">{% endif %}
+						<div class="card">
+							<div class="card-body">
+								<div class="row">
+									<div class="col-6 mb-3">
+										<label>Nome da Empresa</label>
+										<input type="text" name="nome" class="form-control" value="{% if empresa %}{{ empresa.nome }}{% endif %}" required>
+									</div>
+
+									<div class="col-6 mb-3">
+										<label>CNPJ</label>
+										<input type="text" name="cnpj" class="form-control" value="{% if empresa %}{{ empresa.cnpj }}{% endif %}">
+									</div>
+
+									<div class="col-6 mb-3">
+										<label>Email</label>
+										<input type="email" name="email" class="form-control" value="{% if empresa %}{{ empresa.email }}{% endif %}">
+									</div>
+
+									<div class="col-6 mb-3">
+										<label>Telefone</label>
+										<input type="text" name="telefone" class="form-control" value="{% if empresa %}{{ empresa.telefone }}{% endif %}">
+									</div>
+
+									<div class="col-12 mb-3">
+										<label>Endereço</label>
+										<input type="text" name="endereco" class="form-control" value="{% if empresa %}{{ empresa.endereco }}{% endif %}">
+									</div>
+								</div>
+							</div>
+
+							<div class="card-footer">
+								<button type="submit" class="btn btn-success">
+									Salvar
+								</button>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+{% endblock %}
+{% block script %}
+	{% include 'script.html' %}
+	<script src="/js/company.js"></script>
+{% endblock %}

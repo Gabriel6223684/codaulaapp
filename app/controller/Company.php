@@ -7,133 +7,104 @@ use app\database\builder\InsertQuery;
 use app\database\builder\UpdateQuery;
 use app\database\builder\DeleteQuery;
 
-class Product extends Base
+class Company extends Base
 {
     public function lista($request, $response)
     {
         try {
-            $products = SelectQuery::select()->from('product')->order('id', 'desc')->fetchAll();
+            $empresas = SelectQuery::select()->from('empresa')->order('id', 'desc')->fetchAll();
             $dadosTemplate = [
-                'titulo' => 'Pesquisa de produtos',
-                'products' => $products
+                'titulo' => 'Pesquisa de empresas',
+                'empresas' => $empresas
             ];
             return $this->getTwig()
-                ->render($response, $this->setView('listproduct'), $dadosTemplate)
+                ->render($response, $this->setView('listcompany'), $dadosTemplate)
                 ->withHeader('Content-Type', 'text/html')
                 ->withStatus(200);
         } catch (\Exception $e) {
             return $this->SendJson($response, ['status' => false, 'msg' => 'Erro: ' . $e->getMessage()], 500);
         }
     }
-
     public function cadastro($request, $response)
     {
         try {
             $dadosTemplate = [
                 'acao' => 'c',
-                'titulo' => 'Cadastro e edição de produtos'
+                'titulo' => 'Cadastro e edição'
             ];
             return $this->getTwig()
-                ->render($response, $this->setView('product'), $dadosTemplate)
+                ->render($response, $this->setView('company'), $dadosTemplate)
                 ->withHeader('Content-Type', 'text/html')
                 ->withStatus(200);
         } catch (\Exception $e) {
             return $this->SendJson($response, ['status' => false, 'msg' => 'Erro: ' . $e->getMessage()], 500);
         }
     }
-
     public function alterar($request, $response, $args)
     {
         try {
             $id = $args['id'];
-            $product = SelectQuery::select()->from('product')->where('id', '=', $id)->fetch();
+            $empresa = SelectQuery::select()->from('empresa')->where('id', '=', $id)->fetch();
             $dadosTemplate = [
                 'acao' => 'e',
                 'id' => $id,
-                'titulo' => 'Cadastro e edição de produtos',
-                'product' => $product
+                'titulo' => 'Cadastro e edição',
+                'empresa' => $empresa
             ];
             return $this->getTwig()
-                ->render($response, $this->setView('product'), $dadosTemplate)
+                ->render($response, $this->setView('company'), $dadosTemplate)
                 ->withHeader('Content-Type', 'text/html')
                 ->withStatus(200);
         } catch (\Exception $e) {
             return $this->SendJson($response, ['status' => false, 'msg' => 'Erro: ' . $e->getMessage()], 500);
         }
     }
-
     public function insert($request, $response)
     {
         try {
             $form = $request->getParsedBody();
+            
             if (!$form || !is_array($form)) {
                 return $this->SendJson($response, ['status' => false, 'msg' => 'Erro: corpo da requisição vazio ou inválido', 'id' => 0], 400);
             }
-
-            // Sanitize numeric fields: convert comma to dot for PostgreSQL
-            $normalizarPreco = function ($valor) {
-                if (is_string($valor)) {
-                    $valor = str_replace('.', '', $valor);
-                    $valor = str_replace(',', '.', $valor);
-                }
-                return floatval($valor) ?? 0;
-            };
-
+            
             $FieldAndValues = [
                 'nome' => $form['nome'] ?? '',
-                'codigo' => $form['codigo'] ?? '',
-                'codigo_barra' => $form['codigo_barra'] ?? '',
-                'descricao' => $form['descricao'] ?? '',
-                'preco_custo' => $normalizarPreco($form['preco_custo'] ?? 0),
-                'preco_venda' => $normalizarPreco($form['preco_venda'] ?? 0),
-                'ativo' => (isset($form['ativo']) && $form['ativo'] === '1') ? true : false
+                'cnpj' => $form['cnpj'] ?? '',
+                'email' => $form['email'] ?? '',
+                'telefone' => $form['telefone'] ?? '',
+                'endereco' => $form['endereco'] ?? ''
             ];
-            if (isset($form['fornecedor_id']) && $form['fornecedor_id'] !== '') {
-                $FieldAndValues['fornecedor_id'] = $form['fornecedor_id'];
-            }
-            $IsSave = InsertQuery::table('product')->save($FieldAndValues);
+            
+            $IsSave = InsertQuery::table('empresa')->save($FieldAndValues);
             if (!$IsSave) {
                 return $this->SendJson($response, ['status' => false, 'msg' => 'Erro ao inserir: ' . $IsSave, 'id' => 0], 403);
             }
-            $product = SelectQuery::select('id')->from('product')->order('id', 'desc')->fetch();
-            if (!$product || !isset($product['id'])) {
+            $empresa = SelectQuery::select('id')->from('empresa')->order('id', 'desc')->fetch();
+            if (!$empresa || !isset($empresa['id'])) {
                 return $this->SendJson($response, ['status' => false, 'msg' => 'Erro: não foi possível recuperar o ID do registro inserido', 'id' => 0], 500);
             }
-            return $this->SendJson($response, ['status' => true, 'msg' => 'Salvo com sucesso', 'id' => $product['id']], 201);
+            return $this->SendJson($response, ['status' => true, 'msg' => 'Salvo com sucesso', 'id' => $empresa['id']], 201);
         } catch (\Exception $e) {
             return $this->SendJson($response, ['status' => false, 'msg' => 'Restrição: ' . $e->getMessage(), 'id' => 0], 500);
         }
     }
-
     public function update($request, $response)
     {
         try {
             $form = $request->getParsedBody();
-            $id = $form['id'] ?? null;
+            $id = $form['id'];
             if (is_null($id) || empty($id)) {
                 return $this->SendJson($response, ['status' => false, 'msg' => 'Por favor informe o ID', 'id' => 0], 500);
             }
-
-            // Sanitize numeric fields: convert comma to dot for PostgreSQL
-            $normalizarPreco = function ($valor) {
-                if (is_string($valor)) {
-                    $valor = str_replace('.', '', $valor);
-                    $valor = str_replace(',', '.', $valor);
-                }
-                return floatval($valor) ?? 0;
-            };
-
             $FieldAndValues = [
-                'nome' => $form['nome'] ?? '',
-                'codigo' => $form['codigo'] ?? '',
-                'codigo_barra' => $form['codigo_barra'] ?? '',
-                'descricao' => $form['descricao'] ?? '',
-                'preco_custo' => $normalizarPreco($form['preco_custo'] ?? 0),
-                'preco_venda' => $normalizarPreco($form['preco_venda'] ?? 0),
-                'fornecedor_id' => $form['fornecedor_id'] ?? null,
-                'ativo' => $form['ativo'] ?? true
+                'nome' => $form['nome'],
+                'cnpj' => $form['cnpj'],
+                'email' => $form['email'],
+                'telefone' => $form['telefone'],
+                'endereco' => $form['endereco']
             ];
-            $IsUpdate = UpdateQuery::table('product')->set($FieldAndValues)->where('id', '=', $id)->update();
+            $IsUpdate = UpdateQuery::table('empresa')->set($FieldAndValues)->where('id', '=', $id)->update();
             if (!$IsUpdate) {
                 return $this->SendJson($response, ['status' => false, 'msg' => 'Restrição: ' . $IsUpdate, 'id' => 0], 403);
             }
@@ -142,7 +113,6 @@ class Product extends Base
             return $this->SendJson($response, ['status' => false, 'msg' => 'Restrição: ' . $e->getMessage(), 'id' => 0], 500);
         }
     }
-
     public function deletar($request, $response, $args)
     {
         try {
@@ -150,11 +120,11 @@ class Product extends Base
             if (is_null($id) || empty($id)) {
                 return $this->SendJson($response, ['status' => false, 'msg' => 'Por favor informe o ID', 'id' => 0], 400);
             }
-            $IsDelete = DeleteQuery::table('product')->where('id', '=', $id)->delete();
+            $IsDelete = DeleteQuery::table('empresa')->where('id', '=', $id)->delete();
             if (!$IsDelete) {
-                return $this->SendJson($response, ['status' => false, 'msg' => 'Erro ao deletar o produto', 'id' => 0], 403);
+                return $this->SendJson($response, ['status' => false, 'msg' => 'Erro ao deletar a empresa', 'id' => 0], 403);
             }
-            return $this->SendJson($response, ['status' => true, 'msg' => 'Produto excluído com sucesso!', 'id' => $id], 200);
+            return $this->SendJson($response, ['status' => true, 'msg' => 'Empresa excluída com sucesso!', 'id' => $id], 200);
         } catch (\Exception $e) {
             return $this->SendJson($response, ['status' => false, 'msg' => 'Restrição: ' . $e->getMessage(), 'id' => 0], 500);
         }
@@ -162,13 +132,13 @@ class Product extends Base
     public function print($request, $response)
     {
         try {
-            $products = SelectQuery::select()->from('product')->order('id', 'desc')->fetchAll();
+            $empresas = SelectQuery::select()->from('empresa')->order('id', 'desc')->fetchAll();
             $dadosTemplate = [
-                'titulo' => 'Relatório de Produtos',
-                'products' => $products
+                'titulo' => 'Relatório de Empresas',
+                'empresas' => $empresas
             ];
             return $this->getTwig()
-                ->render($response, $this->setView('printproduct'), $dadosTemplate)
+                ->render($response, $this->setView('printcompany'), $dadosTemplate)
                 ->withHeader('Content-Type', 'text/html')
                 ->withStatus(200);
         } catch (\Exception $e) {

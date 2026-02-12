@@ -94,3 +94,31 @@ CREATE TABLE IF NOT EXISTS sale_items (
     data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Criar tabela cliente
+CREATE TABLE IF NOT EXISTS cliente (
+    id BIGSERIAL PRIMARY KEY,
+    nome TEXT NOT NULL,
+    sobrenome TEXT,
+    cpf TEXT,
+    rg TEXT,
+    email TEXT,
+    telefone TEXT,
+    endereco TEXT,
+    ativo BOOLEAN DEFAULT true,
+    data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Criar tabela empresa
+CREATE TABLE IF NOT EXISTS empresa (
+    id BIGSERIAL PRIMARY KEY,
+    nome TEXT NOT NULL,
+    cnpj TEXT,
+    email TEXT,
+    telefone TEXT,
+    endereco TEXT,
+    ativo BOOLEAN DEFAULT true,
+    data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

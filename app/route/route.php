@@ -7,6 +7,8 @@ use app\controller\Sale;
 use app\controller\User;
 use app\controller\Product;
 use app\controller\Supplier;
+use app\controller\Client;
+use app\controller\Company;
 use Slim\Routing\RouteCollectorProxy;
 
 $app->get('/', Home::class . ':home');
@@ -70,4 +72,22 @@ $app->group('/supplier', function (RouteCollectorProxy $group) {
     $group->post('/insert', Supplier::class . ':insert');
     $group->post('/update', Supplier::class . ':update');
     $group->delete('/deletar/{id}', Supplier::class . ':deletar');
+});
+$app->group('/cliente', function (RouteCollectorProxy $group) {
+    $group->get('/lista', Client::class . ':lista');
+    $group->get('/cadastro', Client::class . ':cadastro');
+    $group->get('/alterar/{id}', Client::class . ':alterar');
+    $group->get('/print', Client::class . ':print');
+    $group->post('/insert', Client::class . ':insert');
+    $group->post('/update', Client::class . ':update');
+    $group->delete('/deletar/{id}', Client::class . ':deletar');
+});
+$app->group('/empresa', function (RouteCollectorProxy $group) {
+    $group->get('/lista', Company::class . ':lista');
+    $group->get('/cadastro', Company::class . ':cadastro');
+    $group->get('/alterar/{id}', Company::class . ':alterar');
+    $group->get('/print', Company::class . ':print');
+    $group->post('/insert', Company::class . ':insert');
+    $group->post('/update', Company::class . ':update');
+    $group->delete('/deletar/{id}', Company::class . ':deletar');
 });

@@ -1,3 +1,6 @@
+import { Validate } from "./Validate";
+
+const insertItemButton = document.getElementById('insertItemButton');
 // Atualizar relógio em tempo real
 function updateClock() {
     const now = new Date();
@@ -30,6 +33,26 @@ function updateClock() {
 // Atualizar a cada segundo
 setInterval(updateClock, 1000);
 updateClock();
+
+async function InsertSale() {
+    const valid = Validate.SetForm('form').Validate();
+    if (!valid) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Erro',
+            text: 'Por favor, preencha os campos corretamente.',
+            time: 2000,
+            progressBar: true,
+        });
+        return;
+    }
+    try {
+        const response = await Request.SetForm('form').Post('/venda/insert');
+    } catch (error) {
+        throw new Error(error);
+    }
+}
+
 // Event Listeners para botões de adicionar
 document.addEventListener('DOMContentLoaded', function () {
     // Botões de adicionar produto
@@ -153,24 +176,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 });
-// Atalhos de teclado
-document.addEventListener('keydown', function (e) {
-    // F2 - Focar no campo de busca
-    if (e.key === 'F2') {
-        e.preventDefault();
-        document.querySelector('.search-input')?.focus();
-    }
-    // F9 - Finalizar venda
-    if (e.key === 'F9') {
-        e.preventDefault();
-        document.querySelector('.btn-finalize')?.click();
-    }
-    // Esc - Cancelar venda
-    if (e.key === 'Escape') {
-        e.preventDefault();
-        document.querySelector('.btn-cancel')?.click();
-    }
-});
 // Feedback visual para cliques
 document.addEventListener('click', function (e) {
     if (e.target.matches('button')) {
@@ -178,80 +183,42 @@ document.addEventListener('click', function (e) {
     }
 });
 
+insertItemButton.addEventListener('click', async () => {
+    alert('Clickou no item');
+});
+
 document.addEventListener('keydown', (e) => {
-    //Fechamos o modal com a tecla F3
+    //Bloque a ação de teclas F4, F8 e F9, F12 para evitar ações indesejadas
+    //e.preventDefault();
+    //Abrimos o modal de pesquisa de produto com a tecla F4
+    if (e.key === 'F4') {
+        const myModalEl = document.getElementById('pesquisaProdutoModal');
+        const modal = new bootstrap.Modal(myModalEl);
+        modal.show();
+    }
+    //Fechamos o modal de pesquisa de produto com a tecla F8
     if (e.key === 'F8') {
         const myModalEl = document.getElementById('pesquisaProdutoModal');
-        const modal = bootstrap.Modal.getInstance(myModalEl);
+        const modal = new bootstrap.Modal(myModalEl);
         modal.hide();
     }
+    //Inserimos o item da venda com a tecla F9
+    if (e.key === 'F9') {
+        alert('olá');
+    }
 });
 
-$("#pesquisa").select2({
-    theme: "bootstrap-5",
+$('#pesquisa').select2({
+    theme: 'bootstrap-5',
     placeholder: "Selecione um produto",
+    language: "pt-BR",
     ajax: {
-        url: "/produto/listproductdata",
-        type: "POST",
-        delay: 250
+        url: '/produto/listproductdata',
+        type: 'POST'
     }
 });
-
-// Event listener para botão "Inserir" (F9) - adicionar item ao carrinho
-document.addEventListener('DOMContentLoaded', function () {
-    const insertButton = document.getElementById('insertItemButton');
-    if (insertButton) {
-        insertButton.addEventListener('click', function () {
-            const productSelect = document.getElementById('pesquisa');
-            const quantityInput = document.getElementById('quantidade');
-            const saleIdInput = document.getElementById('id');
-
-            const productId = productSelect?.value;
-            const quantity = parseInt(quantityInput?.value || 1);
-            const saleId = parseInt(saleIdInput?.value || 0);
-
-            if (!productId || productId === '') {
-                alert('Selecione um produto antes de adicionar');
-                return;
-            }
-
-            // Get price from select2 selected option
-            const selectedOption = productSelect.selectedOptions[0];
-            const priceText = selectedOption?.textContent || '';
-            const priceMatch = priceText.match(/R\$\s*([\d,\.]+)/);
-            const preco = priceMatch ? parseFloat(priceMatch[1].replace(',', '.')) : 0;
-
-            const payload = {
-                sale_id: saleId,
-                product_id: parseInt(productId),
-                quantidade: quantity,
-                preco_unitario: preco
-            };
-
-            fetch('/venda/insertitem', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            })
-            .then(r => r.text())
-            .then(t => {
-                const m = t.match(/\{[\s\S]*\}/);
-                if (m) return JSON.parse(m[0]);
-                throw new Error('Nenhum JSON encontrado');
-            })
-            .then(data => {
-                if (data.status === true) {
-                    alert('Produto adicionado ao carrinho!');
-                    productSelect.value = '';
-                    productSelect.trigger('change');
-                    location.reload();
-                } else {
-                    alert("Erro: " + data.msg);
-                }
-            })
-            .catch(error => {
-                alert("Erro ao adicionar: " + error.message);
-            });
-        });
-    }
+$('.form-select').on('select2:open', function (e) {
+    let inputElement = document.querySelector('.select2-search__field');
+    inputElement.placeholder = 'Digite para pesquisar...';
+    inputElement.focus();
 });
