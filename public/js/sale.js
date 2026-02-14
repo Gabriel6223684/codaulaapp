@@ -1,5 +1,8 @@
-import { Validate } from "./Validate";
+import { Validate } from "./Validate.js";
+import { Requests } from "./Requests.js";
 
+const Action = document.getElementById('acao');
+const Id = document.getElementById('id');
 const insertItemButton = document.getElementById('insertItemButton');
 // Atualizar relógio em tempo real
 function updateClock() {
@@ -47,9 +50,31 @@ async function InsertSale() {
         return;
     }
     try {
-        const response = await Request.SetForm('form').Post('/venda/insert');
+        const response = await Requests.SetForm('form').Post('/venda/insert');
+        if (!response.status) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: response.msg || 'Ocorreu um erro ao inserir a venda.',
+                time: 3000,
+                progressBar: true,
+            });
+            return;
+        }
+        //Altera a ação do formulário para 'e' (editar) após a venda ser inserida com sucesso
+        Action.value = 'e';
+        //Seta o ID da última venda inserida no banco de dados
+        Id.value = response.id;
+        //Atualiza a URL sem recarregar a página para refletir o ID da venda inserida
+        window.history.pushState({}, '', `/venda/alterar/${response.id}`);
     } catch (error) {
-        throw new Error(error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Erro',
+            text: error.message || 'Ocorreu um erro ao inserir a venda.',
+            time: 3000,
+            progressBar: true,
+        });
     }
 }
 
@@ -184,7 +209,7 @@ document.addEventListener('click', function (e) {
 });
 
 insertItemButton.addEventListener('click', async () => {
-    alert('Clickou no item');
+    await InsertSale();
 });
 
 document.addEventListener('keydown', (e) => {
@@ -201,10 +226,11 @@ document.addEventListener('keydown', (e) => {
         const myModalEl = document.getElementById('pesquisaProdutoModal');
         const modal = new bootstrap.Modal(myModalEl);
         modal.hide();
+        console.log('F8 pressed - Modal closed');
     }
     //Inserimos o item da venda com a tecla F9
     if (e.key === 'F9') {
-        alert('olá');
+        insertItemButton.click();
     }
 });
 
@@ -221,4 +247,111 @@ $('.form-select').on('select2:open', function (e) {
     let inputElement = document.querySelector('.select2-search__field');
     inputElement.placeholder = 'Digite para pesquisar...';
     inputElement.focus();
+});
+
+const filterProducts = (searchTerm) => {
+    const productRows = document.querySelectorAll('.product-row');
+    productRows.forEach(row => {
+        const code = row.cells[0].textContent.toLowerCase();
+        const description = row.cells[1].textContent.toLowerCase();
+        const price = row.cells[2].textContent.toLowerCase();
+        if (code.includes(searchTerm) || description.includes(searchTerm) || price.includes(searchTerm)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+};
+
+function addToCart(code, description, price) {
+    const existingItem = cart.find(item => item.code === code);
+    if (existingItem) {
+        existingItem.quantity += 1;
+    } else {
+        cart.push({ code, description, price, quantity: 1 });
+    }
+    updateCart();
+}
+
+const updateCart = () => {
+    const cartTableBody = document.querySelector('.cart-table tbody');
+    cartTableBody.innerHTML = '';
+    cart.forEach(item => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${item.code}</td>
+            <td>${item.description}</td>
+            <td>R$ ${item.price.toFixed(2)}</td>
+            <td>${item.quantity}</td>
+            <td>R$ ${(item.price * item.quantity).toFixed(2)}</td>
+        `;
+        cartTableBody.appendChild(row);
+    });
+    updateTotals();
+}
+
+const updateTotals = () => {
+    const totalAmount = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+    let discountAmount = 0;
+    if (discount.type === 'valor') {
+        discountAmount = discount.amount;
+    } else if (discount.type === 'percentual') {
+        discountAmount = totalAmount * (discount.amount / 100);
+    }
+    const finalAmount = totalAmount - discountAmount;
+    document.querySelector('.total-amount').textContent = `R$ ${finalAmount.toFixed(2)}`;
+    document.querySelector('.discount-amount').textContent = `Desconto: R$ ${discountAmount.toFixed(2)}`;
+}
+
+function updateInputStyles() {
+    const discountInputRs = document.querySelector('.discount-input-rs');
+    const discountInputPercent = document.querySelector('.discount-input-percent');
+    if (discount.type === 'valor') {
+        discountInputRs.classList.add('active');
+        discountInputPercent.classList.remove('active');
+    } else {
+        discountInputRs.classList.remove('active');
+        discountInputPercent.classList.add('active');
+    }
+}
+
+async function loadSaleData() {
+    const saleId = Id.value;
+    if (!saleId) return;
+    try {
+        const response = await Requests.Get(`/venda/get/${saleId}`);
+        if (response.status) {
+            // Preencher os campos do formulário com os dados da venda
+            // Exemplo: document.getElementById('customerName').value = response.data.customerName;
+            // Preencher o carrinho com os itens da venda
+            // Exemplo: response.data.items.forEach(item => addToCart(item.code, item.description, item.price));
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: response.msg || 'Ocorreu um erro ao carregar os dados da venda.',
+                time: 3000,
+                progressBar: true,
+            });
+        }
+    } catch (error) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Erro',
+            text: error.message || 'Ocorreu um erro ao carregar os dados da venda.',
+            time: 3000,
+            progressBar: true,
+        });
+    }
+}
+
+// Carregar os dados da venda ao carregar a página
+document.addEventListener('DOMContentLoaded', loadSaleData);
+
+
+// Feedback visual para cliques
+document.addEventListener('click', function (e) {
+    if (e.target.matches('button')) {
+        e.target.style.transition = 'transform 0.1s';
+    }
 });
