@@ -1,6 +1,11 @@
 import { Validate } from "./Validate.js";
 import { Requests } from "./Requests.js";
 
+// Variáveis do carrinho - inicializadas
+let cart = [];
+let discount = { type: 'valor', amount: 0 };
+let paymentMethod = 'dinheiro';
+
 const Action = document.getElementById('acao');
 const Id = document.getElementById('id');
 const insertItemButton = document.getElementById('insertItemButton');
@@ -234,6 +239,153 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
+// Função para carregar produtos na tabela do modal
+async function loadProductsInModal(search = '') {
+    try {
+        const formData = new FormData();
+        formData.append('search', search);
+        
+        const response = await fetch('/produto/listproductdata', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.status && data.results) {
+            const tbody = document.getElementById('tabelaProdutosBody');
+            tbody.innerHTML = '';
+            
+            data.results.forEach(product => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${product.codigo || ''}</td>
+                    <td>${product.nome || ''}</td>
+                    <td>${product.codigo_barra || ''}</td>
+                    <td>R$ ${parseFloat(product.preco_venda || 0).toFixed(2).replace('.', ',')}</td>
+                    <td>
+                        <button class="btn btn-success btn-sm btn-select-product" 
+                                data-id="${product.id}" 
+                                data-nome="${product.nome}" 
+                                data-codigo="${product.codigo}" 
+                                data-preco="${product.preco_venda}">
+                            <i class="fas fa-plus"></i> Selecionar
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            // Adicionar event listeners aos botões de selecionar
+            document.querySelectorAll('.btn-select-product').forEach(button => {
+                button.addEventListener('click', async function() {
+                    const id_produto = this.dataset.id;
+                    const nome = this.dataset.nome;
+                    const codigo = this.dataset.codigo;
+                    const preco = parseFloat(this.dataset.preco);
+                    
+                    try {
+                        // Verificar se já existe uma venda
+                        let saleId = Id.value;
+                        
+                        // Se não existir venda, criar uma
+                        if (!saleId || saleId === '') {
+                            const saleResponse = await fetch('/venda/insert', {
+                                method: 'POST',
+                                body: new FormData(document.getElementById('form'))
+                            });
+                            const saleData = await saleResponse.json();
+                            
+                            if (!saleData.status) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Erro',
+                                    text: saleData.msg || 'Erro ao criar venda'
+                                });
+                                return;
+                            }
+                            
+                            saleId = saleData.id;
+                            Id.value = saleId;
+                            Action.value = 'e';
+                            window.history.pushState({}, '', `/venda/alterar/${saleId}`);
+                        }
+                        
+                        // Inserir o item na venda
+                        const formData = new FormData();
+                        formData.append('id_venda', saleId);
+                        formData.append('id_produto', id_produto);
+                        formData.append('quantidade', '1');
+                        formData.append('preco_unitario', preco);
+                        
+                        const response = await fetch('/venda/insertitem', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.status) {
+                            // Adicionar ao carrinho local também
+                            addToCart(codigo, nome, preco);
+                            
+                            // Fechar o modal
+                            const modalEl = document.getElementById('pesquisaProdutoModal');
+                            const modal = bootstrap.Modal.getInstance(modalEl);
+                            modal.hide();
+                            
+                            // Mostrar mensagem de sucesso
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Produto adicionado',
+                                text: `${nome} adicionado à venda!`,
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Erro',
+                                text: data.msg || 'Erro ao adicionar produto'
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Erro detalhado:', error);
+                        let errorMessage = 'Erro ao adicionar produto na venda';
+                        if (error.message) {
+                            errorMessage += ': ' + error.message;
+                        }
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Erro',
+                            text: errorMessage
+                        });
+                    }
+                });
+            });
+        }
+    } catch (error) {
+        console.error('Erro ao carregar produtos:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Erro',
+            text: 'Erro ao carregar produtos'
+        });
+    }
+}
+
+// Carregar produtos quando o modal for aberto
+document.getElementById('pesquisaProdutoModal').addEventListener('shown.bs.modal', function () {
+    loadProductsInModal();
+});
+
+// Pesquisar produtos ao digitar no campo de pesquisa do modal
+document.getElementById('pesquisaModal').addEventListener('input', function(e) {
+    const search = e.target.value;
+    loadProductsInModal(search);
+});
+
+// Select2 para pesquisa de produto
 $('#pesquisa').select2({
     theme: 'bootstrap-5',
     placeholder: "Selecione um produto",
@@ -243,6 +395,7 @@ $('#pesquisa').select2({
         type: 'POST'
     }
 });
+
 $('.form-select').on('select2:open', function (e) {
     let inputElement = document.querySelector('.select2-search__field');
     inputElement.placeholder = 'Digite para pesquisar...';

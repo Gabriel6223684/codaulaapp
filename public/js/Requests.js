@@ -18,5 +18,14 @@ class Requests {
         const response = await fetch(url, option);
         return await response.json();
     }
+    static async Get(url) {
+        const option = {
+            method: 'GET',
+            cache: 'default',
+            mode: 'cors'
+        };
+        const response = await fetch(url, option);
+        return await response.json();
+    }
 }
 export { Requests };

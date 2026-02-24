@@ -175,4 +175,60 @@ class Product extends Base
             return $this->SendJson($response, ['status' => false, 'msg' => 'Erro: ' . $e->getMessage()], 500);
         }
     }
+
+    public function listproductdata($request, $response)
+    {
+        try {
+            $form = $request->getParsedBody();
+            $search = $form['search'] ?? '';
+            $page = isset($form['page']) ? intval($form['page']) : 1;
+            $perPage = 10;
+            $offset = ($page - 1) * $perPage;
+
+            // Se há termo de busca, filtra por nome, código ou código de barras
+            if (!empty($search)) {
+                $products = SelectQuery::select('id, nome, codigo, codigo_barra, preco_venda')
+                    ->from('product')
+                    ->where('ativo', '=', 'true')
+                    ->order('nome', 'asc')
+                    ->limit($perPage, $offset)
+                    ->fetchAll();
+                
+                // Filtro manual em PHP para buscar no nome, código ou código de barras
+                $products = array_filter($products, function($product) use ($search) {
+                    $searchLower = strtolower($search);
+                    return strpos(strtolower($product['nome']), $searchLower) !== false ||
+                           strpos(strtolower($product['codigo']), $searchLower) !== false ||
+                           strpos(strtolower($product['codigo_barra']), $searchLower) !== false;
+                });
+            } else {
+                $products = SelectQuery::select('id, nome, codigo, codigo_barra, preco_venda')
+                    ->from('product')
+                    ->where('ativo', '=', 'true')
+                    ->order('nome', 'asc')
+                    ->limit($perPage, $offset)
+                    ->fetchAll();
+            }
+
+            // Formata os dados para o Select2
+            $results = [];
+            foreach ($products as $product) {
+                $results[] = [
+                    'id' => $product['id'],
+                    'text' => $product['nome'] . ' - ' . $product['codigo'] . ' (R$ ' . number_format($product['preco_venda'], 2, ',', '.') . ')',
+                    'nome' => $product['nome'],
+                    'codigo' => $product['codigo'],
+                    'codigo_barra' => $product['codigo_barra'],
+                    'preco_venda' => $product['preco_venda']
+                ];
+            }
+
+            return $this->SendJson($response, [
+                'status' => true,
+                'results' => $results
+            ], 200);
+        } catch (\Exception $e) {
+            return $this->SendJson($response, ['status' => false, 'msg' => 'Erro: ' . $e->getMessage()], 500);
+        }
+    }
 }

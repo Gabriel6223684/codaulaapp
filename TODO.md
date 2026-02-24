@@ -1,29 +1,26 @@
-# TODO - Sale Functionality Fix
+# Plano de Correção do Sistema de Vendas - COMPLETO
 
-## Tasks to Complete:
+## Tarefas executadas:
 
-### 1. Sale.php Controller Updates
-- [ ] Fix title in `cadastro()` method (change from "Página inicial" to "Cadastro de Venda")
-- [ ] Implement `alterar($request, $response, $args)` - Load existing sale for editing
-- [ ] Implement `print($request, $response)` - Print sale
-- [ ] Implement `update($request, $response)` - Update sale totals and details
-- [ ] Implement `insertItem($request, $response)` - Add item to sale
-- [ ] Implement `deletar($request, $response, $args)` - Delete a sale
-- [ ] Implement `deleteItem($request, $response, $args)` - Delete item from sale
-- [ ] Improve `insert()` method to accept additional parameters
+### 1. Product.php - Adicionar método listproductdata
+- [x] Adicionar método `listproductdata` para buscar produtos via AJAX para o select2
 
-### 2. sale.js JavaScript Updates
-- [ ] Add `cart` array variable to track items
-- [ ] Add `discount` object variable for discounts
-- [ ] Add `paymentMethod` variable
-- [ ] Implement `addToCart()` function to add products to cart
-- [ ] Implement `updateCart()` function to render cart items
-- [ ] Implement `updateTotals()` function to calculate totals
-- [ ] Fix F9 key handler to add items to cart
-- [ ] Fix finalize button to save complete sale
-- [ ] Fix cancel button functionality
+### 2. Sale.php - Adicionar métodos faltantes
+- [x] Adicionar método `update` - atualizar venda
+- [x] Adicionar método `insertItem` - inserir item na venda
+- [x] Adicionar método `deleteItem` - remover item da venda
+- [x] Adicionar método `deletar` - excluir venda
+- [x] Adicionar método `print` - imprimir venda
+- [x] Adicionar método `get` - buscar dados da venda
 
-### 3. sale.html View Updates (if needed)
-- [ ] Ensure proper structure for discount inputs with correct classes
+### 3. sale.js - Corrigir variáveis não inicializadas
+- [x] Inicializar variável `cart` como array vazio
+- [x] Inicializar variável `discount` como objeto
 
-## Status: In Progress
+### 4. Requests.js - Adicionar método GET
+- [x] Adicionar método `Get` para buscar dados da API
+
+### 5. route.php - Adicionar rota GET para venda
+- [x] Adicionar rota `/venda/get/{id}`
+
+## Status: CONCLUÍDO
