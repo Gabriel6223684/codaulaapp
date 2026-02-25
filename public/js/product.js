@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.status === true) {
                 alert('Produto salvo com sucesso!');
-                window.location.replace('/sale');
+                window.location.reload();
             } else {
                 alert("Erro: " + data.msg);
             }

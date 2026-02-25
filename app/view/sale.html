@@ -49,6 +49,7 @@
             </div>
         </div>
     </div>
+    
     <!-- Sidebar Esquerda -->
     <aside class="sidebar">
         <div class="logo-section">
@@ -67,6 +68,7 @@
             </div>
         </div>
     </aside>
+    
     <!-- Conteúdo Principal -->
     <main class="main-content">
         <!-- Header -->
@@ -93,6 +95,7 @@
                 <button class="icon-btn"><i class="fas fa-sign-out-alt"></i></button>
             </div>
         </header>
+        
         <!-- Área de Conteúdo -->
         <div class="content-wrapper">
             <!-- Seção de Produtos -->
@@ -135,32 +138,105 @@
                                 <th>Código</th>
                                 <th>Descrição</th>
                                 <th>Preço</th>
+                                <th>Qtd</th>
                                 <th>Ação</th>
                             </tr>
                         </thead>
-                        <tbody></tbody>
+                        <tbody id="productsTableBody">
+                        </tbody>
                     </table>
                 </div>
             </section>
+            
             <!-- Seção do Carrinho -->
             <aside class="cart-section">
+                <!-- Cart Table -->
+                <div class="cart-table-section mb-3">
+                    <h5><i class="fas fa-shopping-cart"></i> Carrinho</h5>
+                    <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+                        <table class="table table-sm table-striped cart-table" id="cartTable">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Descrição</th>
+                                    <th>Preço</th>
+                                    <th>Qtd</th>
+                                    <th>Total</th>
+                                    <th>Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cartTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-center mt-2">
+                        <small class="text-muted" id="cartItemCount">0 itens</small>
+                    </div>
+                </div>
+                
                 <div class="payment-section">
                     <div class="discount-section">
                         <p class="discount-label">
-                            <i class="fas fa-percent"></i> Desconto
+                            <i class="fas fa-percent"></i> Desconto / Juros
                         </p>
                         <div class="row">
                             <div class="col-12">
                                 <div class="input-group">
-                                    <input type="text" placeholder="Desconto em R$" aria-label="First name"
+                                    <input type="text" id="discountValue" placeholder="Desconto em R$" aria-label="Desconto"
                                         class="form-control">
 
-                                    <input type="text" placeholder="Juros em R$" aria-label="Last name"
+                                    <input type="text" id="interestValue" placeholder="Juros em R$" aria-label="Juros"
                                         class="form-control">
                                 </div>
                             </div>
                         </div>
                     </div>
+
+                    <!-- Payment Terms Section -->
+                    <div class="payment-terms-section">
+                        <p class="payment-terms-label">
+                            <i class="fas fa-credit-card"></i> Condição de Pagamento
+                        </p>
+                        <div class="row">
+                            <div class="col-12">
+                                <select id="paymentTermsSelect" class="form-select">
+                                    <option value="">Selecione a condição de pagamento...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row mt-2" id="installmentInfo" style="display: none;">
+                            <div class="col-6">
+                                <small class="text-muted">Parcelas:</small>
+                                <span id="installmentCount" class="fw-bold">1x</span>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Valor parcela:</small>
+                                <span id="installmentValue" class="fw-bold">R$ 0,00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Installments Display Section -->
+                    <div class="installments-section mt-3" id="installmentsSection" style="display: none;">
+                        <p class="installments-label">
+                            <i class="fas fa-calendar-alt"></i> Parcelas
+                        </p>
+                        <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+                            <table class="table table-sm table-bordered" id="installmentsTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Valor</th>
+                                        <th>Vencimento</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="installmentsBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
                     <div class="total-section">
                         <div class="subtotal">
                             <span>Subtotal:</span>

@@ -90,68 +90,77 @@ class Sale extends Base
 
     public function insert($request, $response)
     {
-        $form = $request->getParsedBody();
-        
-        $customer = SelectQuery::select('id')
-            ->from('customer')
-            ->order('id', 'asc')
-            ->limit(1)
-            ->fetch();
-        
-        if (!$customer) {
-            return $this->SendJson($response, [
-                'status' => false,
-                'msg' => 'Restrição: Nenhum cliente encontrado!',
-                'id' => 0
-            ], 403);
-        }
-        
-        $id_customer = $customer['id'];
-        
-        $FieldAndValue = [
-            'id_cliente' => $id_customer,
-            'total_bruto' => 0,
-            'total_liquido' => 0,
-            'desconto' => 0,
-            'acrescimo' => 0,
-            'observacao' => ''
-        ];
-        
         try {
+            $form = $request->getParsedBody();
+            
+            // Cliente é opcional - tenta buscar, mas se não existir, continua com null
+            $id_customer = null;
+            try {
+                $customer = SelectQuery::select('id')
+                    ->from('customer')
+                    ->order('id', 'asc')
+                    ->limit(1)
+                    ->fetch();
+                
+                if ($customer) {
+                    $id_customer = $customer['id'];
+                }
+            } catch (\Exception $e) {
+                // Tabela customer pode não existir ou estar vazia
+                error_log('Aviso ao buscar cliente: ' . $e->getMessage());
+            }
+            
+            $FieldAndValue = [
+                'id_cliente' => $id_customer,
+                'total_bruto' => 0,
+                'total_liquido' => 0,
+                'desconto' => 0,
+                'acrescimo' => 0,
+                'observacao' => ''
+            ];
+            
             $IsInserted = InsertQuery::table('sale')->save($FieldAndValue);
+            
             if (!$IsInserted) {
                 return $this->SendJson(
                     $response,
                     [
                         'status' => false,
-                        'msg' => 'Restrição: Falha ao inserir a venda!',
+                        'msg' => 'Erro ao inserir a venda no banco de dados',
                         'id' => 0
                     ],
                     403
                 );
             }
+            
+            // Obter o ID da venda inserida
             $sale = SelectQuery::select('id')
                 ->from('sale')
                 ->order('id', 'desc')
                 ->limit(1)
                 ->fetch();
+                
             if (!$sale) {
                 return $this->SendJson($response, [
                     'status' => false,
-                    'msg' => 'Restrição: Nenhuma venda encontrada!',
+                    'msg' => 'Erro ao recuperar ID da venda',
                     'id' => 0
                 ], 403);
             }
+            
             $id_sale = $sale["id"];
+            
             return $this->SendJson($response, [
                 'status' => true,
                 'msg' => 'Venda inserida com sucesso!',
                 'id' => $id_sale
             ], 201);
+            
         } catch (\Exception $e) {
+            error_log('Erro completo no insert sale: ' . $e->getMessage());
             return $this->SendJson($response, [
                 'status' => false,
-                'msg' => 'Restrição: ' . $e->getMessage(),
+                'msg' => 'Erro: ' . $e->getMessage(),
                 'id' => 0
             ], 500);
         }
@@ -271,9 +280,10 @@ class Sale extends Base
                 'total' => $total
             ];
 
-            $IsInserted = InsertQuery::table('item_sale')->save($FieldAndValue);
+            // Inserir e obter o ID do item
+            $itemId = InsertQuery::table('item_sale')->save($FieldAndValue, true);
 
-            if (!$IsInserted) {
+            if (!$itemId) {
                 return $this->SendJson($response, [
                     'status' => false,
                     'msg' => 'Restrição: Falha ao inserir o item!'
@@ -284,7 +294,8 @@ class Sale extends Base
 
             return $this->SendJson($response, [
                 'status' => true,
-                'msg' => 'Item inserido com sucesso!'
+                'msg' => 'Item inserido com sucesso!',
+                'itemId' => $itemId
             ], 201);
         } catch (\Exception $e) {
             return $this->SendJson($response, [
@@ -466,6 +477,231 @@ class Sale extends Base
         } catch (\Exception $e) {
             error_log('Erro ao atualizar totais da venda: ' . $e->getMessage());
             return false;
+        }
+    }
+
+    /**
+     * Salva os termos de pagamento na venda
+     */
+    public function savePaymentTerms($request, $response)
+    {
+        try {
+            $form = $request->getParsedBody();
+            
+            $id_venda = $form['id_venda'] ?? null;
+            $id_pagamento = $form['id_pagamento'] ?? null;
+
+            if (is_null($id_venda) || empty($id_venda)) {
+                return $this->SendJson($response, [
+                    'status' => false,
+                    'msg' => 'Restrição: O ID da venda é obrigatório!'
+                ], 403);
+            }
+
+            if (is_null($id_pagamento) || empty($id_pagamento)) {
+                return $this->SendJson($response, [
+                    'status' => false,
+                    'msg' => 'Restrição: O termo de pagamento é obrigatório!'
+                ], 403);
+            }
+
+            // Verificar se o termo de pagamento existe
+            $paymentTerm = SelectQuery::select('id')
+                ->from('payment_terms')
+                ->where('id', '=', $id_pagamento)
+                ->fetch();
+
+            if (!$paymentTerm) {
+                return $this->SendJson($response, [
+                    'status' => false,
+                    'msg' => 'Restrição: Termo de pagamento não encontrado!'
+                ], 403);
+            }
+
+            $IsUpdate = UpdateQuery::table('sale')
+                ->set([
+                    'id_pagamento' => $id_pagamento,
+                    'data_atualizacao' => date('Y-m-d H:i:s')
+                ])
+                ->where('id', '=', $id_venda)
+                ->update();
+
+            if (!$IsUpdate) {
+                return $this->SendJson($response, [
+                    'status' => false,
+                    'msg' => 'Restrição: Falha ao salvar o termo de pagamento!'
+                ], 403);
+            }
+
+            return $this->SendJson($response, [
+                'status' => true,
+                'msg' => 'Termo de pagamento salvo com sucesso!'
+            ], 200);
+        } catch (\Exception $e) {
+            return $this->SendJson($response, [
+                'status' => false,
+                'msg' => 'Restrição: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Cria as parcelas da venda
+     */
+    public function createInstallments($request, $response)
+    {
+        try {
+            $form = $request->getParsedBody();
+            
+            $id_venda = $form['id_venda'] ?? null;
+            $valor_total = floatval(str_replace(',', '.', str_replace('.', '', $form['valor_total'] ?? 0)));
+            $num_parcelas = intval($form['num_parcelas'] ?? 1);
+            $intervalo = intval($form['intervalo'] ?? 30);
+            $data_vencimento = $form['data_vencimento'] ?? date('Y-m-d');
+
+            if (is_null($id_venda) || empty($id_venda)) {
+                return $this->SendJson($response, [
+                    'status' => false,
+                    'msg' => 'Restrição: O ID da venda é obrigatório!'
+                ], 403);
+            }
+
+            if ($valor_total <= 0) {
+                return $this->SendJson($response, [
+                    'status' => false,
+                    'msg' => 'Restrição: O valor total deve ser maior que zero!'
+                ], 403);
+            }
+
+            if ($num_parcelas <= 0) {
+                return $this->SendJson($response, [
+                    'status' => false,
+                    'msg' => 'Restrição: O número de parcelas deve ser maior que zero!'
+                ], 403);
+            }
+
+            // Verificar se já existem parcelas para esta venda
+            $existingInstallments = SelectQuery::select('id')
+                ->from('sale_installments')
+                ->where('id_venda', '=', $id_venda)
+                ->fetchAll();
+
+            if (!empty($existingInstallments)) {
+                DeleteQuery::table('sale_installments')
+                    ->where('id_venda', '=', $id_venda)
+                    ->delete();
+            }
+
+            // Calcular valor de cada parcela
+            $valor_parcela = $valor_total / $num_parcelas;
+            $valor_parcela = round($valor_parcela, 2);
+
+            // Criar as parcelas
+            $installmentsCreated = [];
+            for ($i = 1; $i <= $num_parcelas; $i++) {
+                $dataVencimento = date('Y-m-d', strtotime("+".(($i - 1) * $intervalo)." days", strtotime($data_vencimento)));
+                
+                $FieldAndValue = [
+                    'id_venda' => $id_venda,
+                    'numero_parcela' => $i,
+                    'valor_parcela' => $valor_parcela,
+                    'data_vencimento' => $dataVencimento,
+                    'status' => 'pendente'
+                ];
+
+                $IsInserted = InsertQuery::table('sale_installments')->save($FieldAndValue);
+                
+                if ($IsInserted) {
+                    $installmentsCreated[] = [
+                        'numero' => $i,
+                        'valor' => $valor_parcela,
+                        'vencimento' => $dataVencimento
+                    ];
+                }
+            }
+
+            if (empty($installmentsCreated)) {
+                return $this->SendJson($response, [
+                    'status' => false,
+                    'msg' => 'Restrição: Falha ao criar as parcelas!'
+                ], 403);
+            }
+
+            return $this->SendJson($response, [
+                'status' => true,
+                'msg' => 'Parcelas criadas com sucesso!',
+                'data' => $installmentsCreated
+            ], 201);
+        } catch (\Exception $e) {
+            return $this->SendJson($response, [
+                'status' => false,
+                'msg' => 'Restrição: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Retorna as parcelas de uma venda
+     */
+    public function getInstallments($request, $response, $args)
+    {
+        try {
+            $id_venda = $args['id'] ?? null;
+
+            if (is_null($id_venda) || empty($id_venda)) {
+                return $this->SendJson($response, [
+                    'status' => false,
+                    'msg' => 'Restrição: O ID da venda é obrigatório!'
+                ], 403);
+            }
+
+            $installments = SelectQuery::select()
+                ->from('sale_installments')
+                ->where('id_venda', '=', $id_venda)
+                ->order('numero_parcela', 'asc')
+                ->fetchAll();
+
+            return $this->SendJson($response, [
+                'status' => true,
+                'data' => $installments
+            ], 200);
+        } catch (\Exception $e) {
+            return $this->SendJson($response, [
+                'status' => false,
+                'msg' => 'Restrição: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Lista os termos de pagamento disponíveis
+     */
+    public function getPaymentTerms($request, $response)
+    {
+        try {
+            $paymentTerms = SelectQuery::select('id, codigo, titulo')
+                ->from('payment_terms')
+                ->order('titulo', 'asc')
+                ->fetchAll();
+
+            foreach ($paymentTerms as &$term) {
+                $installments = SelectQuery::select('parcela, intervalo')
+                    ->from('installment')
+                    ->where('id_pagamento', '=', $term['id'])
+                    ->fetchAll();
+                
+                $term['installments'] = $installments;
+            }
+
+            return $this->SendJson($response, [
+                'status' => true,
+                'data' => $paymentTerms
+            ], 200);
+        } catch (\Exception $e) {
+            return $this->SendJson($response, [
+                'status' => false,
+                'msg' => 'Restrição: ' . $e->getMessage()
+            ], 500);
         }
     }
 }

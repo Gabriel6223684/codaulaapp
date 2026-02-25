@@ -1,26 +1,21 @@
-# Plano de Correção do Sistema de Vendas - COMPLETO
+# TODO - Correções do Sistema
 
-## Tarefas executadas:
+## Problema 1: Produto some após alteração ✅
+- Arquivo: `public/js/product.js`
+- Problema: Após salvar produto, redireciona para `/sale` ao invés de manter o produto visível
+- Solução: Alterado o redirecionamento para `/product/lista`
 
-### 1. Product.php - Adicionar método listproductdata
-- [x] Adicionar método `listproductdata` para buscar produtos via AJAX para o select2
+## Problema 2: Condição de pagamento no select ✅
+- Arquivo: `app/view/sale.html`
+- Problema: Select de condição de pagamento deve aparecer abaixo do carrinho
+- Solução: Verificar posicionamento no HTML (já está posicionado corretamente)
 
-### 2. Sale.php - Adicionar métodos faltantes
-- [x] Adicionar método `update` - atualizar venda
-- [x] Adicionar método `insertItem` - inserir item na venda
-- [x] Adicionar método `deleteItem` - remover item da venda
-- [x] Adicionar método `deletar` - excluir venda
-- [x] Adicionar método `print` - imprimir venda
-- [x] Adicionar método `get` - buscar dados da venda
-
-### 3. sale.js - Corrigir variáveis não inicializadas
-- [x] Inicializar variável `cart` como array vazio
-- [x] Inicializar variável `discount` como objeto
-
-### 4. Requests.js - Adicionar método GET
-- [x] Adicionar método `Get` para buscar dados da API
-
-### 5. route.php - Adicionar rota GET para venda
-- [x] Adicionar rota `/venda/get/{id}`
-
-## Status: CONCLUÍDO
+## Problema 3: Produtos somem ao atualizar a página ✅
+- Arquivo: `public/js/sale.js`
+- Problema: Carrinho é armazenado apenas em memória, perdendo dados ao atualizar
+- Solução: Implementado persistência com localStorage:
+  - saveCartToLocalStorage() - salva carrinho, desconto e juros
+  - loadCartFromLocalStorage() - restaura carrinho ao carregar página
+  - clearCartFromLocalStorage() - limpa dados ao finalizar/cancelar venda
+  - Carrinho é salvo automaticamente ao adicionar produto, remover produto, alterar desconto ou juros
+  - Carrinho é restaurado ao carregar a página se não houver ID de venda

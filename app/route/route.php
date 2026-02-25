@@ -36,10 +36,14 @@ $app->group('/venda', function (RouteCollectorProxy $group) {
     $group->get('/cadastro', Sale::class . ':cadastro');
     $group->get('/alterar/{id}', Sale::class . ':alterar');
     $group->get('/get/{id}', Sale::class . ':get');
+    $group->get('/getinstallments/{id}', Sale::class . ':getInstallments');
     $group->get('/print', Sale::class . ':print');
     $group->post('/insert', Sale::class . ':insert');
     $group->post('/update', Sale::class . ':update');
     $group->post('/insertitem', Sale::class . ':insertItem');
+    $group->post('/savepaymentterms', Sale::class . ':savePaymentTerms');
+    $group->post('/createinstallments', Sale::class . ':createInstallments');
+    $group->get('/getpaymentterms', Sale::class . ':getPaymentTerms');
     $group->delete('/deletar/{id}', Sale::class . ':deletar');
     $group->delete('/deleteitem/{id}', Sale::class . ':deleteItem');
 });

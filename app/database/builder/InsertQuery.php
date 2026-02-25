@@ -21,18 +21,24 @@ class InsertQuery
         $placeHolder = ':' . implode(',:', array_keys($this->FieldsAndValues));
         return "insert into $this->table ($fields) values ($placeHolder)";
     }
-    private function execute(string $query): bool
+    private function execute(string $query, bool $returnId = false): mixed
     {
         $con = Connection::connection();
         $prepare = $con->prepare($query);
-        return $prepare->execute($this->FieldsAndValues);
+        $result = $prepare->execute($this->FieldsAndValues);
+        
+        if ($returnId && $result) {
+            return $con->lastInsertId();
+        }
+        
+        return $result;
     }
-    public function save(array $FieldsAndValues): bool
+    public function save(array $FieldsAndValues, bool $returnId = false): mixed
     {
         $this->FieldsAndValues = $FieldsAndValues;
         $query = $this->createQuery();
         try {
-            return $this->execute($query);
+            return $this->execute($query, $returnId);
         } catch (\PDOException $e) {
             throw new \Exception($e->getMessage());
         }
