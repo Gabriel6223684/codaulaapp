@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Sistema de Controle de Estoque</title>
+
+		<style>:root
+		{
+			--primary: #2563eb;
+			--danger: #dc2626;
+			--success: #16a34a;
+			--warning: #f59e0b;
+			--gray: #f1f5f9;
+		}
+
+		body {
+			font-family: 'Segoe UI', sans-serif;
+			margin: 0;
+			background: var(--gray);
+		}
+
+		header {
+			background: var(--primary);
+			color: white;
+			padding: 20px;
+			font-size: 20px;
+			font-weight: bold;
+		}
+
+		.container {
+			padding: 20px;
+			max-width: 1200px;
+			margin: auto;
+		}
+
+		.card {
+			background: white;
+			padding: 20px;
+			border-radius: 10px;
+			box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+			margin-bottom: 20px;
+		}
+
+		.grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+			gap: 15px;
+		}
+
+		.stat {
+			padding: 15px;
+			border-radius: 8px;
+			color: white;
+			font-weight: bold;
+		}
+
+		.stat.primary {
+			background: var(--primary);
+		}
+		.stat.success {
+			background: var(--success);
+		}
+		.stat.warning {
+			background: var(--warning);
+		}
+		.stat.danger {
+			background: var(--danger);
+		}
+
+		table {
+			width: 100%;
+			border-collapse: collapse;
+		}
+
+		th,
+		td {
+			padding: 10px;
+			border-bottom: 1px solid #ddd;
+			text-align: center;
+		}
+
+		th {
+			background: #f8fafc;
+		}
+
+		button {
+			padding: 6px 10px;
+			border: none;
+			border-radius: 6px;
+			cursor: pointer;
+			font-size: 14px;
+		}
+
+		.btn-primary {
+			background: var(--primary);
+			color: white;
+		}
+		.btn-danger {
+			background: var(--danger);
+			color: white;
+		}
+		.btn-success {
+			background: var(--success);
+			color: white;
+		}
+		.btn-warning {
+			background: var(--warning);
+			color: white;
+		}
+
+		.low-stock {
+			background: #fee2e2;
+			color: #991b1b;
+			font-weight: bold;
+		}
+
+		input,
+		select {
+			padding: 6px;
+			margin: 4px;
+			border: 1px solid #ccc;
+			border-radius: 6px;
+		}
+
+		.modal {
+			display: none;
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background: rgba(0, 0, 0, 0.5);
+			justify-content: center;
+			align-items: center;
+		}
+
+		.modal-content {
+			background: white;
+			padding: 20px;
+			border-radius: 10px;
+			width: 400px;
+		}
+
+		.modal-header {
+			font-weight: bold;
+			margin-bottom: 10px;
+		}
+
+		.modal-content {
+			background: white;
+			padding: 25px;
+			border-radius: 12px;
+			width: 420px;
+			max-width: 95%;
+			box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+		}
+
+		.modal-content label {
+			display: block;
+			margin-top: 10px;
+			font-weight: 600;
+			font-size: 14px;
+		}
+
+		.modal-content input,
+		.modal-content select {
+			width: 100%;
+			padding: 8px;
+			margin-top: 5px;
+			border: 1px solid #ccc;
+			border-radius: 8px;
+			font-size: 14px;
+		}
+
+		.modal-actions {
+			display: flex;
+			justify-content: space-between;
+			margin-top: 20px;
+		}
+
+		.feedback {
+			margin-top: 10px;
+			font-size: 14px;
+			font-weight: 600;
+		}
+	</style>
+</head>
+<body>
+
+	<header>Sistema Profissional de Controle de Estoque</header>
+
+	<div
+		class="container">
+
+		<!-- DASHBOARD -->
+		<div class="grid" id="dashboard"></div>
+
+		<!-- CADASTRO -->
+		<div class="card">
+			<h3>Cadastrar Produto</h3>
+			<input type="text" id="newName" placeholder="Nome do produto">
+			<input type="number" id="newStock" placeholder="Estoque inicial">
+			<input type="number" id="newMin" placeholder="Estoque mínimo">
+			<button class="btn-success" onclick="addProduct()">Cadastrar</button>
+		</div>
+
+		<!-- PRODUTOS -->
+		<div class="card">
+			<h3>Lista de Produtos</h3>
+			<table>
+				<thead>
+					<tr>
+						<th>Produto</th>
+						<th>Estoque</th>
+						<th>Mínimo</th>
+						<th>Status</th>
+						<th>Ações</th>
+					</tr>
+				</thead>
+				<tbody id="productTable"></tbody>
+			</table>
+		</div>
+
+		<!-- HISTÓRICO -->
+		<div class="card">
+			<h3>Histórico</h3>
+			<select id="filterProduct" onchange="renderHistory()">
+				<option value="">Todos</option>
+			</select>
+			<table>
+				<thead>
+					<tr>
+						<th>Data</th>
+						<th>Produto</th>
+						<th>Tipo</th>
+						<th>Qtd</th>
+						<th>Motivo</th>
+					</tr>
+				</thead>
+				<tbody id="historyTable"></tbody>
+			</table>
+		</div>
+
+	</div>
+
+	<!-- MODAL -->
+	<div class="modal" id="modal">
+		<div class="modal-content">
+
+			<div class="modal-header">Movimentação de Estoque</div>
+
+			<input type="hidden" id="modalId">
+
+			<label>Tipo</label>
+			<select id="type">
+				<option value="entrada">Entrada (+)</option>
+				<option value="saida">Saída (-)</option>
+			</select>
+
+			<label>Quantidade</label>
+			<input type="number" id="qty" min="1" placeholder="Digite a quantidade">
+
+			<label>Motivo</label>
+			<select id="reasonType">
+				<option value="">Selecione</option>
+				<option value="Compra">Compra</option>
+				<option value="Venda">Venda</option>
+				<option value="Ajuste Manual">Ajuste Manual</option>
+				<option value="Perda/Avaria">Perda / Avaria</option>
+				<option value="Devolução">Devolução</option>
+			</select>
+
+			<label>Responsável</label>
+			<input type="text" id="responsible" placeholder="Nome do responsável">
+
+			<div class="modal-actions">
+				<button class="btn-success" onclick="saveAdjust()">Confirmar</button>
+				<button class="btn-danger" onclick="closeModal()">Cancelar</button>
+			</div>
+
+			<div id="feedback" class="feedback"></div>
+
+		</div>
+	</div>
+
+	<script>
+		let products = JSON.parse(localStorage.getItem("productsPro")) || [];
+let history = JSON.parse(localStorage.getItem("historyPro")) || [];
+
+function saveData() {
+localStorage.setItem("productsPro", JSON.stringify(products));
+localStorage.setItem("historyPro", JSON.stringify(history));
+}
+
+function renderDashboard() {
+let totalProducts = products.length;
+let totalStock = products.reduce((sum, p) => sum + p.stock, 0);
+let lowStock = products.filter(p => p.stock <= p.min).length;
+
+document.getElementById("dashboard").innerHTML = `
+<div class="stat primary">Produtos: ${totalProducts}</div>
+<div class="stat success">Total em Estoque: ${totalStock}</div>
+<div class="stat warning">Estoque Baixo: ${lowStock}</div>
+`;
+}
+
+function addProduct() {
+let name = document.getElementById("newName").value.trim();
+let stock = parseInt(document.getElementById("newStock").value);
+let min = parseInt(document.getElementById("newMin").value);
+
+if (! name || stock < 0 || min < 0) {
+alert("Preencha corretamente!");
+return;
+}
+
+products.push({id: Date.now(), name, stock, min});
+
+saveData();
+renderAll();
+}
+
+function renderProducts() {
+let table = document.getElementById("productTable");
+let filter = document.getElementById("filterProduct");
+
+table.innerHTML = "";
+filter.innerHTML = '<option value="">Todos</option>';
+
+products.forEach(p => {
+let status = p.stock<= p.min ? "Baixo" : "OK";
+
+table.innerHTML += `
+<tr>
+<td>${p.name}</td>
+<td>${p.stock}</td>
+<td>${p.min}</td>
+<td>${status}</td>
+<td>
+<button class="btn-primary" onclick="openModal(${p.id})">Ajustar</button>
+<button class="btn-danger" onclick="deleteProduct(${p.id})">Excluir</button>
+</td>
+</tr>
+`;
+
+filter.innerHTML+=`<option value="${p.name}">${p.name}</option > `;
+});
+}
+
+function deleteProduct(id){
+if(!confirm("Deseja excluir?")) return;
+products=products.filter(p=> p.id !== id
+);
+saveData();
+renderAll();
+}
+
+function openModal(id) {
+document.getElementById("modalId").value = id;
+document.getElementById("modal").style.display = "flex";
+}
+
+function closeModal() {
+document.getElementById("modal").style.display = "none";
+}
+
+function saveAdjust() {
+
+let id = parseInt(document.getElementById("modalId").value);
+let type = document.getElementById("type").value;
+let qty = parseInt(document.getElementById("qty").value);
+let reasonType = document.getElementById("reasonType").value;
+let documentNumber = document.getElementById("documentNumber").value.trim();
+let responsible = document.getElementById("responsible").value.trim();
+let observation = document.getElementById("observation").value.trim();
+let feedback = document.getElementById("feedback");
+
+feedback.innerHTML = "";
+feedback.style.color = "red";
+
+if (! qty || qty <= 0) {
+feedback.innerHTML = "Quantidade inválida.";
+return;
+}
+
+if (! reasonType) {
+feedback.innerHTML = "Selecione o motivo.";
+return;
+}
+
+if (! responsible) {
+feedback.innerHTML = "Informe o responsável.";
+return;
+}
+
+let product = products.find(p => p.id === id);
+
+if (type === "saida" && product.stock<qty){
+feedback.innerHTML="Estoque insuficiente.";
+return;
+}
+
+let saldoAntes=product.stock;
+
+if(type==="entrada"){
+product.stock+=qty;
+}else{
+product.stock-=qty;
+}
+
+let saldoDepois=product.stock;
+
+history.push({
+date:new Date().toLocaleString(), product:product.name, type, qty, reasonType, documentNumber, responsible, observation, saldoAntes, saldoDepois
+});
+
+saveData();
+renderAll();
+
+feedback.style.color="green";
+feedback.innerHTML="Movimentação registrada com sucesso!";
+
+setTimeout(()=> {
+closeModal();
+clearModal();
+}, 1000) 
+
+
+
+
+
+}
+
+function renderHistory() {
+let filter = document.getElementById("filterProduct").value;
+let table = document.getElementById("historyTable");
+table.innerHTML = "";
+
+history.slice().reverse().forEach(h => {
+if (filter && h.product !== filter) 
+return;
+
+
+
+table.innerHTML += `
+<tr>
+<td>${
+h.date
+}</td>
+<td>${
+h.product
+}</td>
+<td>${
+h.type
+}</td>
+<td>${
+h.qty
+}</td>
+<td>${
+h.reasonType
+}</td>
+<td>${
+h.responsible
+}</td>
+<td>${
+h.saldoAntes
+}</td>
+<td>${
+h.saldoDepois
+}</td>
+</tr>
+`;
+});
+}
+
+function renderAll() {
+renderDashboard();
+renderProducts();
+renderHistory();
+}
+
+renderAll();
+
+function clearModal() {
+document.getElementById("qty").value = "";
+document.getElementById("reasonType").value = "";
+document.getElementById("documentNumber").value = "";
+document.getElementById("responsible").value = "";
+document.getElementById("observation").value = "";
+document.getElementById("feedback").innerHTML = "";
+}
+
+</script>
+		</body>
+	</body>
+</body></html></body></html></body></html></body></html></body></html> </body></html></body></html>

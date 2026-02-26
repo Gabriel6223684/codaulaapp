@@ -6,9 +6,11 @@ let cart = [];
 let productsTable = [];
 let discount = { type: 'valor', amount: 0 };
 let interest = { type: 'valor', amount: 0 };
-let paymentMethod = 'dinheiro';
+let paymentMethod = 'pix';
+let paymentType = 'avista'; // 'avista' ou 'parcelado'
 let selectedPaymentTerm = null;
 let paymentTermsData = [];
+let selectedProductFromSearch = null;
 
 // Elementos do DOM
 const Action = document.getElementById('acao');
@@ -161,23 +163,36 @@ async function loadPaymentTerms() {
         
         if (data.status && data.data) {
             paymentTermsData = data.data;
+            
+            // Atualizar select principal
             const select = document.getElementById('paymentTermsSelect');
-            if (!select) {
-                log('paymentTermsSelect não encontrado!');
-                return;
+            if (select) {
+                select.innerHTML = '<option value="">Selecione a condição de pagamento...</option>';
+                paymentTermsData.forEach(term => {
+                    const option = document.createElement('option');
+                    option.value = term.id;
+                    const parcelas = term.installments && term.installments.length > 0 ? `(${term.installments.length}x)` : '';
+                    option.textContent = `${term.titulo} ${parcelas}`;
+                    option.dataset.parcelas = term.installments && term.installments.length > 0 ? term.installments[0].parcela : 1;
+                    option.dataset.intervalo = term.installments && term.installments.length > 0 ? term.installments[0].intervalor : 30;
+                    select.appendChild(option);
+                });
             }
             
-            select.innerHTML = '<option value="">Selecione a condição de pagamento...</option>';
-            
-            paymentTermsData.forEach(term => {
-                const option = document.createElement('option');
-                option.value = term.id;
-                const parcelas = term.installments && term.installments.length > 0 ? `(${term.installments.length}x)` : '';
-                option.textContent = `${term.titulo} ${parcelas}`;
-                option.dataset.parcelas = term.installments && term.installments.length > 0 ? term.installments[0].parcela : 1;
-                option.dataset.intervalo = term.installments && term.installments.length > 0 ? term.installments[0].intervalor : 30;
-                select.appendChild(option);
-            });
+            // Atualizar select do modal
+            const modalSelect = document.getElementById('modalPaymentTermsSelect');
+            if (modalSelect) {
+                modalSelect.innerHTML = '<option value="">Selecione a condição...</option>';
+                paymentTermsData.forEach(term => {
+                    const option = document.createElement('option');
+                    option.value = term.id;
+                    const parcelas = term.installments && term.installments.length > 0 ? `(${term.installments.length}x)` : '';
+                    option.textContent = `${term.titulo} ${parcelas}`;
+                    option.dataset.parcelas = term.installments && term.installments.length > 0 ? term.installments[0].parcela : 1;
+                    option.dataset.intervalo = term.installments && term.installments.length > 0 ? term.installments[0].intervalor : 30;
+                    modalSelect.appendChild(option);
+                });
+            }
             
             log('Termos de pagamento carregados: ' + paymentTermsData.length);
         }
@@ -215,8 +230,8 @@ function calculateInstallments() {
     if (installmentInfo) installmentInfo.style.display = 'flex';
 }
 
-async function savePaymentTermsAndCreateInstallments(saleId) {
-    const paymentTermsSelect = document.getElementById('paymentTermsSelect');
+async function savePaymentTermsAndCreateInstallments(saleId, paymentTermsSelectId = 'paymentTermsSelect') {
+    const paymentTermsSelect = document.getElementById(paymentTermsSelectId);
     const id_pagamento = paymentTermsSelect?.value;
     
     if (!id_pagamento) {
@@ -266,6 +281,7 @@ async function savePaymentTermsAndCreateInstallments(saleId) {
         
         if (installmentsData.status) {
             displayInstallments(installmentsData.data);
+            displayModalInstallments(installmentsData.data);
         }
         
         return installmentsData;
@@ -282,6 +298,35 @@ function displayInstallments(installments) {
     tbody.innerHTML = '';
     
     const installmentsSection = document.getElementById('installmentsSection');
+    if (!installments || installments.length === 0) {
+        if (installmentsSection) installmentsSection.style.display = 'none';
+        return;
+    }
+    
+    installments.forEach(inst => {
+        const row = document.createElement('tr');
+        const vencimento = new Date(inst.vencimento).toLocaleDateString('pt-BR');
+        const valor = parseFloat(inst.valor).toFixed(2).replace('.', ',');
+        
+        row.innerHTML = `
+            <td>${inst.numero}</td>
+            <td>R$ ${valor}</td>
+            <td>${vencimento}</td>
+            <td><span class="badge bg-warning">Pendente</span></td>
+        `;
+        tbody.appendChild(row);
+    });
+    
+    if (installmentsSection) installmentsSection.style.display = 'block';
+}
+
+function displayModalInstallments(installments) {
+    const tbody = document.getElementById('modalInstallmentsBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    
+    const installmentsSection = document.getElementById('modalInstallmentsSection');
     if (!installments || installments.length === 0) {
         if (installmentsSection) installmentsSection.style.display = 'none';
         return;
@@ -351,7 +396,7 @@ function loadCartFromLocalStorage() {
             }
         }
     } catch (e) {
-        console.error('[Sale] Erro ao carregar do localStorage:', e);
+        console.error('[Sale carregar do localStorage] Erro ao:', e);
     }
 }
 
@@ -524,6 +569,9 @@ function addProductToTable(product) {
         <td>R$ ${parseFloat(product.preco_venda || 0).toFixed(2).replace('.', ',')}</td>
         <td>1</td>
         <td>
+            <button class="btn btn-success btn-sm btn-add-to-cart" title="Adicionar ao Carrinho">
+                <i class="fas fa-cart-plus"></i>
+            </button>
             <button class="btn btn-danger btn-sm btn-remove-from-table" title="Remover">
                 <i class="fas fa-trash"></i>
             </button>
@@ -534,6 +582,19 @@ function addProductToTable(product) {
     updateProductCount();
     saveCartToLocalStorage();
     
+    // Botão adicionar ao carrinho
+    row.querySelector('.btn-add-to-cart').addEventListener('click', function() {
+        addToCart(product.codigo, product.nome, parseFloat(product.preco_venda));
+        Swal.fire({
+            icon: 'success',
+            title: 'Adicionado',
+            text: `${product.nome} adicionado ao carrinho!`,
+            timer: 1500,
+            showConfirmButton: false
+        });
+    });
+    
+    // Botão remover
     row.querySelector('.btn-remove-from-table').addEventListener('click', function() {
         row.remove();
         updateProductCount();
@@ -551,7 +612,6 @@ function restoreProductsTable() {
         return;
     }
     
-    // Limpar tabela primeiro
     tbody.innerHTML = '';
     
     log('Restaurando produtos da tabela:', productsTable.length);
@@ -570,6 +630,9 @@ function restoreProductsTable() {
             <td>R$ ${parseFloat(product.preco_venda || 0).toFixed(2).replace('.', ',')}</td>
             <td>1</td>
             <td>
+                <button class="btn btn-success btn-sm btn-add-to-cart" title="Adicionar ao Carrinho">
+                    <i class="fas fa-cart-plus"></i>
+                </button>
                 <button class="btn btn-danger btn-sm btn-remove-from-table" title="Remover">
                     <i class="fas fa-trash"></i>
                 </button>
@@ -577,6 +640,17 @@ function restoreProductsTable() {
         `;
         
         tbody.appendChild(row);
+        
+        row.querySelector('.btn-add-to-cart').addEventListener('click', function() {
+            addToCart(product.codigo, product.nome, parseFloat(product.preco_venda));
+            Swal.fire({
+                icon: 'success',
+                title: 'Adicionado',
+                text: `${product.nome} adicionado ao carrinho!`,
+                timer: 1500,
+                showConfirmButton: false
+            });
+        });
         
         row.querySelector('.btn-remove-from-table').addEventListener('click', function() {
             row.remove();
@@ -605,7 +679,6 @@ async function loadSaleData() {
         log('Resposta da API:', response);
         
         if (response.status && response.data) {
-            // Carregar desconto e juros
             if (response.data.sale) {
                 const sale = response.data.sale;
                 const discountValue = document.getElementById('discountValue');
@@ -626,18 +699,15 @@ async function loadSaleData() {
                 }
             }
             
-            // Carregar itens da venda
             if (response.data.items && response.data.items.length > 0) {
                 log('Itens encontrados:', response.data.items.length);
                 
                 response.data.items.forEach(item => {
-                    const productId = item.id_produto || item.produto_id;
                     const produtoCodigo = item.produto_codigo || '';
                     const produtoNome = item.produto_nome || '';
                     const precoUnitario = parseFloat(item.preco_unitario) || 0;
                     const quantidade = parseFloat(item.quantidade) || 1;
                     
-                    // Adicionar ao carrinho
                     cart.push({
                         code: produtoCodigo,
                         description: produtoNome,
@@ -651,13 +721,11 @@ async function loadSaleData() {
                 log('Carrinho atualizado com sucesso');
             }
             
-            // Carregar parcelas
             const installmentsResponse = await Requests.Get(`/venda/getinstallments/${saleId}`);
             if (installmentsResponse.status && installmentsResponse.data) {
                 displayInstallments(installmentsResponse.data);
             }
             
-            // Carregar termos de pagamento
             await loadPaymentTerms();
         }
     } catch (error) {
@@ -738,33 +806,393 @@ const filterProducts = (searchTerm) => {
     });
 };
 
+// ================== MODAL FINALIZAR VENDA ==================
+
+function openFinalizarVendaModal() {
+    const totalAmount = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+    
+    let discountAmount = 0;
+    let interestAmount = 0;
+    
+    const discountInput = document.getElementById('discountValue');
+    if (discountInput && discountInput.value) {
+        discountAmount = parseFloat(discountInput.value.replace(',', '.')) || 0;
+    }
+    
+    const interestInput = document.getElementById('interestValue');
+    if (interestInput && interestInput.value) {
+        interestAmount = parseFloat(interestInput.value.replace(',', '.')) || 0;
+    }
+    
+    const finalAmount = totalAmount - discountAmount + interestAmount;
+    
+    const modalSubtotal = document.getElementById('modalSubtotal');
+    const modalDesconto = document.getElementById('modalDesconto');
+    const modalTotal = document.getElementById('modalTotal');
+    const modalDiscountValue = document.getElementById('modalDiscountValue');
+    const modalInterestValue = document.getElementById('modalInterestValue');
+    
+    if (modalSubtotal) modalSubtotal.textContent = `R$ ${totalAmount.toFixed(2).replace('.', ',')}`;
+    if (modalDesconto) modalDesconto.textContent = `R$ ${discountAmount.toFixed(2).replace('.', ',')}`;
+    if (modalTotal) modalTotal.textContent = `R$ ${finalAmount.toFixed(2).replace('.', ',')}`;
+    if (modalDiscountValue) modalDiscountValue.value = discountInput?.value || '';
+    if (modalInterestValue) modalInterestValue.value = interestInput?.value || '';
+    
+    paymentType = 'avista';
+    
+    loadPaymentTerms();
+    
+    const modalPaymentTypeButtons = document.getElementById('modalPaymentTypeButtons');
+    if (modalPaymentTypeButtons) {
+        modalPaymentTypeButtons.querySelectorAll('.payment-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.type === 'avista') {
+                btn.classList.add('active');
+            }
+        });
+    }
+    
+    const modalPaymentButtons = document.getElementById('modalPaymentButtons');
+    if (modalPaymentButtons) {
+        modalPaymentButtons.querySelectorAll('.payment-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.method === 'pix') {
+                btn.classList.add('active');
+            }
+        });
+    }
+    
+    // Reset payment details visibility
+    const pixPaymentDetails = document.getElementById('pixPaymentDetails');
+    const cardPaymentDetails = document.getElementById('cardPaymentDetails');
+    if (pixPaymentDetails) pixPaymentDetails.style.display = 'block';
+    if (cardPaymentDetails) cardPaymentDetails.style.display = 'none';
+    
+    // Resetar select de parcelas
+    const installmentCountSelect = document.getElementById('modalInstallmentCountSelect');
+    if (installmentCountSelect) {
+        installmentCountSelect.value = '';
+    }
+    
+    const avistaSection = document.getElementById('avistaPaymentSection');
+    const parceladoSection = document.getElementById('parceladoSection');
+    const modalInstallmentInfo = document.getElementById('modalInstallmentInfo');
+    const modalInstallmentsSection = document.getElementById('modalInstallmentsSection');
+    
+    if (avistaSection) avistaSection.style.display = 'block';
+    if (parceladoSection) parceladoSection.style.display = 'none';
+    if (modalInstallmentInfo) modalInstallmentInfo.style.display = 'none';
+    if (modalInstallmentsSection) modalInstallmentsSection.style.display = 'none';
+    
+    const modalEl = document.getElementById('finalizarVendaModal');
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+}
+
+function switchPaymentType(type) {
+    paymentType = type;
+    
+    const avistaSection = document.getElementById('avistaPaymentSection');
+    const parceladoSection = document.getElementById('parceladoSection');
+    
+    if (type === 'avista') {
+        if (avistaSection) avistaSection.style.display = 'block';
+        if (parceladoSection) parceladoSection.style.display = 'none';
+    } else {
+        if (avistaSection) avistaSection.style.display = 'none';
+        if (parceladoSection) parceladoSection.style.display = 'block';
+    }
+    
+    log('Tipo de pagamento alterado para:', type);
+}
+
+function calculateModalInstallments() {
+    const totalText = document.getElementById('modalTotal')?.textContent || 'R$ 0';
+    const total = parseFloat(totalText.replace('R$', '').replace(',', '.').trim()) || 0;
+    
+    // Pegar quantidade de parcelas do select
+    const installmentCountSelect = document.getElementById('modalInstallmentCountSelect');
+    if (!installmentCountSelect || !installmentCountSelect.value || total <= 0) {
+        const installmentInfo = document.getElementById('modalInstallmentInfo');
+        const installmentsSection = document.getElementById('modalInstallmentsSection');
+        if (installmentInfo) installmentInfo.style.display = 'none';
+        if (installmentsSection) installmentsSection.style.display = 'none';
+        return;
+    }
+    
+    const numParcelas = parseInt(installmentCountSelect.value) || 1;
+    const valorParcela = total / numParcelas;
+    
+    const installmentCount = document.getElementById('modalInstallmentCount');
+    const installmentValue = document.getElementById('modalInstallmentValue');
+    const installmentInfo = document.getElementById('modalInstallmentInfo');
+    
+    if (installmentCount) installmentCount.textContent = `${numParcelas}x`;
+    if (installmentValue) installmentValue.textContent = `R$ ${valorParcela.toFixed(2).replace('.', ',')}`;
+    if (installmentInfo) installmentInfo.style.display = 'flex';
+    
+    // Atualizar parcelas na tabela
+    const installments = [];
+    for (let i = 1; i <= numParcelas; i++) {
+        installments.push({
+            numero: i,
+            valor: valorParcela,
+            vencimento: new Date(Date.now() + (i * 30 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]
+        });
+    }
+    displayModalInstallments(installments);
+}
+
+async function confirmFinalizeSale() {
+    if (cart.length === 0) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Carrinho vazio',
+            text: 'Adicione produtos primeiro.',
+            time: 2000,
+            progressBar: true,
+        });
+        return;
+    }
+
+    if (!paymentType) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Tipo de pagamento obrigatório',
+            text: 'Por favor, selecione se o pagamento será À Vista ou Parcelado.',
+            time: 2000,
+            progressBar: true,
+        });
+        return;
+    }
+
+    const total = document.querySelector('.total-amount')?.textContent || 'R$ 0';
+    
+    let saleId = Id.value;
+    
+    if (!saleId || saleId === '') {
+        const saleResponse = await fetch('/venda/insert', {
+            method: 'POST',
+            body: new FormData(document.getElementById('form'))
+        });
+        const saleData = await saleResponse.json();
+        
+        if (!saleData.status) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: saleData.msg || 'Erro ao criar venda'
+            });
+            return;
+        }
+        
+        saleId = saleData.id;
+        Id.value = saleId;
+        Action.value = 'e';
+        window.history.pushState({}, '', `/venda/alterar/${saleId}`);
+    }
+    
+    const modalDiscountValue = document.getElementById('modalDiscountValue')?.value || 0;
+    const modalInterestValue = document.getElementById('modalInterestValue')?.value || 0;
+    
+    // Se parcelado, validar seleção de parcelas
+    if (paymentType === 'parcelado') {
+        const installmentCountSelect = document.getElementById('modalInstallmentCountSelect');
+        if (!installmentCountSelect || !installmentCountSelect.value) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Parcelas obrigatória',
+                text: 'Por favor, selecione a quantidade de parcelas.',
+                time: 2000,
+                progressBar: true,
+            });
+            return;
+        }
+    }
+    
+    let metodoPagamento = '';
+    if (paymentType === 'avista') {
+        const activePaymentBtn = document.querySelector('#modalPaymentButtons .payment-btn.active');
+        if (activePaymentBtn) {
+            metodoPagamento = activePaymentBtn.dataset.method;
+        }
+    }
+    
+    // Salvar desconto e juros
+    try {
+        const formDataUpdate = new FormData();
+        formDataUpdate.append('id', saleId);
+        formDataUpdate.append('desconto', modalDiscountValue.replace(',', '.'));
+        formDataUpdate.append('acrescimo', modalInterestValue.replace(',', '.'));
+        
+        await fetch('/venda/update', {
+            method: 'POST',
+            body: formDataUpdate
+        });
+        
+        const mainDiscountInput = document.getElementById('discountValue');
+        const mainInterestInput = document.getElementById('interestValue');
+        if (mainDiscountInput) mainDiscountInput.value = modalDiscountValue;
+        if (mainInterestInput) mainInterestInput.value = modalInterestValue;
+        discount.amount = parseFloat(modalDiscountValue.replace(',', '.')) || 0;
+        interest.amount = parseFloat(modalInterestValue.replace(',', '.')) || 0;
+        
+    } catch (error) {
+        console.error('[Sale] Erro ao atualizar venda:', error);
+    }
+    
+    // Processar pagamento
+    let paymentResult;
+    if (paymentType === 'parcelado') {
+        const installmentCountSelect = document.getElementById('modalInstallmentCountSelect');
+        const numParcelas = parseInt(installmentCountSelect?.value) || 1;
+        
+        // Criar parcelas manualmente
+        const totalText = document.querySelector('.total-amount')?.textContent || 'R$ 0';
+        const valor_total = parseFloat(totalText.replace('R$', '').replace(/\./g, '').replace(',', '.').trim()) || 0;
+        const valorParcela = valor_total / numParcelas;
+        
+        try {
+            const formDataPayment = new FormData();
+            formDataPayment.append('id_venda', saleId);
+            formDataPayment.append('id_pagamento', '1'); // Condição padrão
+            
+            await fetch('/venda/savepaymentterms', {
+                method: 'POST',
+                body: formDataPayment
+            });
+            
+            // Criar parcelas
+            const installmentsData = [];
+            for (let i = 1; i <= numParcelas; i++) {
+                installmentsData.push({
+                    numero: i,
+                    valor: valorParcela,
+                    vencimento: new Date(Date.now() + (i * 30 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0]
+                });
+            }
+            
+            // Salvar cada parcela
+            for (const inst of installmentsData) {
+                const formDataInst = new FormData();
+                formDataInst.append('id_venda', saleId);
+                formDataInst.append('numero', inst.numero);
+                formDataInst.append('valor', inst.valor);
+                formDataInst.append('vencimento', inst.vencimento);
+                
+                await fetch('/venda/createinstallments', {
+                    method: 'POST',
+                    body: formDataInst
+                });
+            }
+            
+            displayModalInstallments(installmentsData);
+            paymentResult = { status: true };
+            
+        } catch (error) {
+            console.error('[Sale] Erro ao criar parcelas:', error);
+            paymentResult = { status: false, msg: error.message };
+        }
+        
+        if (!paymentResult.status) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: paymentResult.msg || 'Erro ao processar pagamento',
+                time: 3000,
+                progressBar: true,
+            });
+            return;
+        }
+    } else {
+        // À vista
+        try {
+            const formDataPayment = new FormData();
+            formDataPayment.append('id_venda', saleId);
+            formDataPayment.append('id_pagamento', '');
+            formDataPayment.append('tipo', 'avista');
+            formDataPayment.append('metodo', metodoPagamento);
+            
+            const paymentResponse = await fetch('/venda/savepaymentterms', {
+                method: 'POST',
+                body: formDataPayment
+            });
+            
+            paymentResult = await paymentResponse.json();
+            
+            if (!paymentResult.status) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: paymentResult.msg || 'Erro ao processar pagamento',
+                    time: 3000,
+                    progressBar: true,
+                });
+                return;
+            }
+        } catch (error) {
+            console.error('[Sale] Erro ao salvar pagamento à vista:', error);
+            paymentResult = { status: true };
+        }
+    }
+
+    const modalEl = document.getElementById('finalizarVendaModal');
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    modal.hide();
+
+    Swal.fire({
+        icon: 'success',
+        title: 'Venda Finalizada',
+        text: `Venda no valor de ${total} finalizada com sucesso!`,
+        time: 3000,
+        progressBar: true,
+    }).then(() => {
+        cart = [];
+        productsTable = [];
+        discount = { type: 'valor', amount: 0 };
+        interest = { type: 'valor', amount: 0 };
+        clearCartFromLocalStorage();
+        
+        const discountEl = document.getElementById('discountValue');
+        const interestEl = document.getElementById('interestValue');
+        const paymentTermsEl = document.getElementById('paymentTermsSelect');
+        const installmentInfo = document.getElementById('installmentInfo');
+        const installmentsSection = document.getElementById('installmentsSection');
+        
+        if (discountEl) discountEl.value = '';
+        if (interestEl) interestEl.value = '';
+        if (paymentTermsEl) paymentTermsEl.value = '';
+        if (installmentInfo) installmentInfo.style.display = 'none';
+        if (installmentsSection) installmentsSection.style.display = 'none';
+        
+        updateCart();
+        
+        window.location.href = '/venda/lista';
+    });
+}
+
 // ================== EVENT LISTENERS ==================
 
 document.addEventListener('DOMContentLoaded', function () {
     log('DOMContentLoaded - ID value:', Id.value);
     log('localStorage disponível:', typeof localStorage !== 'undefined');
     
-    // Carregar termos de pagamento sempre
     loadPaymentTerms();
     
-    // Se tem ID, carregar dados da venda do banco
     if (Id.value && Id.value !== '') {
         log('Carregando dados da venda do banco...');
         setTimeout(() => {
             loadSaleData();
         }, 100);
     } else {
-        // Se não tem ID, carregar do localStorage
         log('Carregando do localStorage...');
         loadCartFromLocalStorage();
         
-        // Restaurar carrinho
         if (cart.length > 0) {
             updateCart();
             log('Carrinho restaurado:', cart.length, 'itens');
         }
         
-        // Restaurar tabela de produtos
         if (productsTable.length > 0) {
             log('Restaurando tabela de produtos...');
             restoreProductsTable();
@@ -773,7 +1201,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
     
-    // Listener para seleção de pagamento
     const paymentTermsSelect = document.getElementById('paymentTermsSelect');
     if (paymentTermsSelect) {
         paymentTermsSelect.addEventListener('change', function() {
@@ -781,7 +1208,33 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
     
-    // Listener para desconto
+    const modalPaymentTermsSelect = document.getElementById('modalPaymentTermsSelect');
+    if (modalPaymentTermsSelect) {
+        modalPaymentTermsSelect.addEventListener('change', function() {
+            calculateModalInstallments();
+        });
+    }
+    
+    // Listener para seleção de quantidade de parcelas
+    const installmentCountSelect = document.getElementById('modalInstallmentCountSelect');
+    if (installmentCountSelect) {
+        installmentCountSelect.addEventListener('change', function() {
+            calculateModalInstallments();
+        });
+    }
+    
+    // Listener para seleção de tipo de pagamento (À Vista / Parcelado)
+    const modalPaymentTypeButtons = document.getElementById('modalPaymentTypeButtons');
+    if (modalPaymentTypeButtons) {
+        modalPaymentTypeButtons.querySelectorAll('.payment-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                modalPaymentTypeButtons.querySelectorAll('.payment-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                switchPaymentType(this.dataset.type);
+            });
+        });
+    }
+    
     const discountInput = document.getElementById('discountValue');
     if (discountInput) {
         discountInput.addEventListener('input', function() {
@@ -791,7 +1244,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
     
-    // Listener para juros
     const interestInput = document.getElementById('interestValue');
     if (interestInput) {
         interestInput.addEventListener('input', function() {
@@ -801,7 +1253,38 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
     
-    // Listener para tabela de produtos
+    const modalDiscountInput = document.getElementById('modalDiscountValue');
+    if (modalDiscountInput) {
+        modalDiscountInput.addEventListener('input', function() {
+            const totalAmount = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+            const discountAmount = parseFloat(this.value.replace(',', '.')) || 0;
+            const interestAmount = parseFloat(document.getElementById('modalInterestValue')?.value.replace(',', '.') || 0);
+            const finalAmount = totalAmount - discountAmount + interestAmount;
+            
+            const modalTotal = document.getElementById('modalTotal');
+            const modalDesconto = document.getElementById('modalDesconto');
+            if (modalTotal) modalTotal.textContent = `R$ ${finalAmount.toFixed(2).replace('.', ',')}`;
+            if (modalDesconto) modalDesconto.textContent = `R$ ${discountAmount.toFixed(2).replace('.', ',')}`;
+            
+            calculateModalInstallments();
+        });
+    }
+    
+    const modalInterestInput = document.getElementById('modalInterestValue');
+    if (modalInterestInput) {
+        modalInterestInput.addEventListener('input', function() {
+            const totalAmount = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+            const discountAmount = parseFloat(document.getElementById('modalDiscountValue')?.value.replace(',', '.') || 0);
+            const interestAmount = parseFloat(this.value.replace(',', '.')) || 0;
+            const finalAmount = totalAmount - discountAmount + interestAmount;
+            
+            const modalTotal = document.getElementById('modalTotal');
+            if (modalTotal) modalTotal.textContent = `R$ ${finalAmount.toFixed(2).replace('.', ',')}`;
+            
+            calculateModalInstallments();
+        });
+    }
+    
     const productsTableBody = document.getElementById('productsTableBody');
     if (productsTableBody) {
         productsTableBody.addEventListener('click', function(e) {
@@ -816,8 +1299,34 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
+    
+    const paymentButtons = document.querySelectorAll('#modalPaymentButtons .payment-btn');
+    paymentButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            paymentButtons.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            paymentMethod = this.dataset.method;
+            
+            // Toggle visibility of payment details based on method
+            const pixDetails = document.getElementById('pixPaymentDetails');
+            const cardDetails = document.getElementById('cardPaymentDetails');
+            
+            if (paymentMethod === 'pix') {
+                if (pixDetails) pixDetails.style.display = 'block';
+                if (cardDetails) cardDetails.style.display = 'none';
+            } else if (paymentMethod === 'cartao') {
+                if (pixDetails) pixDetails.style.display = 'none';
+                if (cardDetails) cardDetails.style.display = 'block';
+            } else {
+                // Dinheiro - hide both
+                if (pixDetails) pixDetails.style.display = 'none';
+                if (cardDetails) cardDetails.style.display = 'none';
+            }
+            
+            log('Método de pagamento selecionado:', paymentMethod);
+        });
+    });
 
-    // Botão de busca
     const searchButton = document.querySelector('.btn-search');
     const searchInput = document.querySelector('.search-input');
 
@@ -836,111 +1345,30 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Botão finalizar venda
-    const finalizeButton = document.querySelector('.btn-finalize');
+    const finalizeButton = document.getElementById('btnFinalizarVenda');
     if (finalizeButton) {
-        finalizeButton.addEventListener('click', async function () {
+        finalizeButton.addEventListener('click', function () {
             if (cart.length === 0) {
                 Swal.fire({
                     icon: 'warning',
                     title: 'Carrinho vazio',
-                    text: 'Adicione produtos primeiro (pesquisa F4, depois Inserir F9).',
+                    text: 'Adicione produtos primeiro.',
                     time: 2000,
                     progressBar: true,
                 });
                 return;
             }
-
-            const total = document.querySelector('.total-amount')?.textContent || 'R$ 0';
-            
-            let saleId = Id.value;
-            
-            if (!saleId || saleId === '') {
-                const saleResponse = await fetch('/venda/insert', {
-                    method: 'POST',
-                    body: new FormData(document.getElementById('form'))
-                });
-                const saleData = await saleResponse.json();
-                
-                if (!saleData.status) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Erro',
-                        text: saleData.msg || 'Erro ao criar venda'
-                    });
-                    return;
-                }
-                
-                saleId = saleData.id;
-                Id.value = saleId;
-                Action.value = 'e';
-                window.history.pushState({}, '', `/venda/alterar/${saleId}`);
-            }
-            
-            // Salvar desconto e juros
-            try {
-                const discountValue = document.getElementById('discountValue')?.value || 0;
-                const interestValue = document.getElementById('interestValue')?.value || 0;
-                
-                const formDataUpdate = new FormData();
-                formDataUpdate.append('id', saleId);
-                formDataUpdate.append('desconto', discountValue.replace(',', '.'));
-                formDataUpdate.append('acrescimo', interestValue.replace(',', '.'));
-                
-                await fetch('/venda/update', {
-                    method: 'POST',
-                    body: formDataUpdate
-                });
-            } catch (error) {
-                console.error('[Sale] Erro ao atualizar venda:', error);
-            }
-            
-            const paymentResult = await savePaymentTermsAndCreateInstallments(saleId);
-            
-            if (!paymentResult.status) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Erro',
-                    text: paymentResult.msg || 'Erro ao processar pagamento',
-                    time: 3000,
-                    progressBar: true,
-                });
-                return;
-            }
-
-            Swal.fire({
-                icon: 'success',
-                title: 'Venda Finalizada',
-                text: `Venda no valor de ${total} finalizada com sucesso!`,
-                time: 3000,
-                progressBar: true,
-            }).then(() => {
-                cart = [];
-                productsTable = [];
-                discount = { type: 'valor', amount: 0 };
-                interest = { type: 'valor', amount: 0 };
-                clearCartFromLocalStorage();
-                
-                const discountEl = document.getElementById('discountValue');
-                const interestEl = document.getElementById('interestValue');
-                const paymentTermsEl = document.getElementById('paymentTermsSelect');
-                const installmentInfo = document.getElementById('installmentInfo');
-                const installmentsSection = document.getElementById('installmentsSection');
-                
-                if (discountEl) discountEl.value = '';
-                if (interestEl) interestEl.value = '';
-                if (paymentTermsEl) paymentTermsEl.value = '';
-                if (installmentInfo) installmentInfo.style.display = 'none';
-                if (installmentsSection) installmentsSection.style.display = 'none';
-                
-                updateCart();
-                
-                window.location.href = '/venda/lista';
-            });
+            openFinalizarVendaModal();
         });
     }
 
-    // Botão cancelar venda
+    const confirmFinalizeButton = document.getElementById('confirmFinalizeButton');
+    if (confirmFinalizeButton) {
+        confirmFinalizeButton.addEventListener('click', async function () {
+            await confirmFinalizeSale();
+        });
+    }
+
     const cancelButton = document.querySelector('.btn-cancel');
     if (cancelButton) {
         cancelButton.addEventListener('click', function () {
@@ -965,7 +1393,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 
-// Modal de produtos
 document.getElementById('pesquisaProdutoModal')?.addEventListener('shown.bs.modal', function () {
     loadProductsInModal();
 });
@@ -974,7 +1401,6 @@ document.getElementById('pesquisaModal')?.addEventListener('input', function(e) 
     loadProductsInModal(e.target.value);
 });
 
-// Select2
 $('#pesquisa').select2({
     theme: 'bootstrap-5',
     placeholder: "Selecione um produto",
@@ -993,12 +1419,10 @@ $('.form-select').on('select2:open', function (e) {
     }
 });
 
-// Botão inserir item
 insertItemButton?.addEventListener('click', async () => {
     await InsertSale();
 });
 
-// Keyboard shortcuts
 document.addEventListener('keydown', (e) => {
     if (e.key === 'F4') {
         const myModalEl = document.getElementById('pesquisaProdutoModal');

@@ -231,4 +231,164 @@ class Product extends Base
             return $this->SendJson($response, ['status' => false, 'msg' => 'Erro: ' . $e->getMessage()], 500);
         }
     }
+
+    /**
+     * Get current stock for a product
+     */
+    public function getStock($request, $response, $args)
+    {
+        try {
+            $id = $args['id'] ?? null;
+            
+            if (is_null($id) || empty($id)) {
+                return $this->SendJson($response, [
+                    'status' => false,
+                    'msg' => 'Por favor informe o ID do produto'
+                ], 400);
+            }
+
+            // Buscar produto
+            $product = SelectQuery::select('id, nome, codigo')
+                ->from('product')
+                ->where('id', '=', $id)
+                ->fetch();
+
+            if (!$product) {
+                return $this->SendJson($response, [
+                    'status' => false,
+                    'msg' => 'Produto não encontrado'
+                ], 404);
+            }
+
+            // Calcular estoque atual a partir dos movimentos
+            $movements = SelectQuery::select()
+                ->from('stock_movement')
+                ->where('id_produto', '=', $id)
+                ->fetchAll();
+
+            $estoque_atual = 0;
+            foreach ($movements as $mov) {
+                $entrada = floatval($mov['quantidade_entrada'] ?? 0);
+                $saida = floatval($mov['quantidade_saida'] ?? 0);
+                $estoque_atual += $entrada - $saida;
+            }
+
+            return $this->SendJson($response, [
+                'status' => true,
+                'data' => [
+                    'id' => $product['id'],
+                    'nome' => $product['nome'],
+                    'codigo' => $product['codigo'],
+                    'estoque_atual' => $estoque_atual
+                ]
+            ], 200);
+        } catch (\Exception $e) {
+            return $this->SendJson($response, [
+                'status' => false,
+                'msg' => 'Erro: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Adjust stock for a product
+     */
+    public function adjustStock($request, $response)
+    {
+        try {
+            $form = $request->getParsedBody();
+            
+            $id_produto = $form['id_produto'] ?? null;
+            $quantidade = floatval(str_replace(',', '.', $form['quantidade'] ?? 0));
+            $tipo = $form['tipo'] ?? 'entrada'; // 'entrada' or 'saida'
+            $observacao = $form['observacao'] ?? '';
+
+            if (is_null($id_produto) || empty($id_produto)) {
+                return $this->SendJson($response, [
+                    'status' => false,
+                    'msg' => 'Por favor informe o ID do produto'
+                ], 400);
+            }
+
+            if ($quantidade <= 0) {
+                return $this->SendJson($response, [
+                    'status' => false,
+                    'msg' => 'A quantidade deve ser maior que zero'
+                ], 400);
+            }
+
+            // Buscar produto
+            $product = SelectQuery::select('id, nome')
+                ->from('product')
+                ->where('id', '=', $id_produto)
+                ->fetch();
+
+            if (!$product) {
+                return $this->SendJson($response, [
+                    'status' => false,
+                    'msg' => 'Produto não encontrado'
+                ], 404);
+            }
+
+            // Calcular estoque atual
+            $movements = SelectQuery::select()
+                ->from('stock_movement')
+                ->where('id_produto', '=', $id_produto)
+                ->fetchAll();
+
+            $estoque_atual = 0;
+            foreach ($movements as $mov) {
+                $entrada = floatval($mov['quantidade_entrada'] ?? 0);
+                $saida = floatval($mov['quantidade_saida'] ?? 0);
+                $estoque_atual += $entrada - $saida;
+            }
+
+            // Determinar quantidade de entrada ou saída
+            if ($tipo === 'saida') {
+                $quantidade_entrada = null;
+                $quantidade_saida = $quantidade;
+                $novo_estoque = $estoque_atual - $quantidade;
+            } else {
+                $quantidade_entrada = $quantidade;
+                $quantidade_saida = null;
+                $novo_estoque = $estoque_atual + $quantidade;
+            }
+
+            // Criar registro de movimento de estoque
+            $FieldAndValues = [
+                'id_produto' => $id_produto,
+                'quantidade_entrada' => $quantidade_entrada,
+                'quantidade_saida' => $quantidade_saida,
+                'estoque_atual' => $novo_estoque,
+                'observacao' => $observacao,
+                'tipo' => $tipo,
+                'origem_movimento' => 'ajuste'
+            ];
+
+            $IsInserted = InsertQuery::table('stock_movement')->save($FieldAndValues);
+
+            if (!$IsInserted) {
+                return $this->SendJson($response, [
+                    'status' => false,
+                    'msg' => 'Erro ao registrar movimento de estoque'
+                ], 403);
+            }
+
+            return $this->SendJson($response, [
+                'status' => true,
+                'msg' => 'Estoque ajustado com sucesso!',
+                'data' => [
+                    'estoque_anterior' => $estoque_atual,
+                    'estoque_atual' => $novo_estoque,
+                    'quantidade' => $quantidade,
+                    'tipo' => $tipo
+                ]
+            ], 201);
+        } catch (\Exception $e) {
+            return $this->SendJson($response, [
+                'status' => false,
+                'msg' => 'Erro: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

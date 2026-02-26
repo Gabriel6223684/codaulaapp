@@ -76,6 +76,11 @@
 								<button type="submit" class="btn btn-success">
 									Salvar
 								</button>
+								{% if acao == 'e' %}
+								<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#ajustarEstoqueModal">
+									Ajustar Estoque
+								</button>
+								{% endif %}
 							</div>
 						</div>
 					</form>
@@ -83,6 +88,70 @@
 			</div>
 		</div>
 	</div>
+
+	<!-- Modal Ajustar Estoque -->
+	{% if acao == 'e' %}
+	<div class="modal fade" id="ajustarEstoqueModal" tabindex="-1" aria-labelledby="ajustarEstoqueLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header bg-primary text-white">
+					<h5 class="modal-title" id="ajustarEstoqueLabel">
+						<i class="fas fa-warehouse"></i> Ajustar Estoque
+					</h5>
+					<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<div class="alert alert-info">
+						<strong>Produto:</strong> <span id="stockProductName">{{ product.nome }}</span><br>
+						<strong>Código:</strong> <span id="stockProductCode">{{ product.codigo }}</span>
+					</div>
+					
+					<div class="mb-3">
+						<label class="form-label fw-bold">Estoque Atual</label>
+						<input type="text" class="form-control" id="currentStock" readonly value="0">
+					</div>
+
+					<div class="mb-3">
+						<label class="form-label fw-bold">Tipo de Movimento</label>
+						<div class="btn-group w-100" role="group">
+							<input type="radio" class="btn-check" name="stockType" id="stockEntrada" value="entrada" autocomplete="off" checked>
+							<label class="btn btn-outline-success" for="stockEntrada">
+								<i class="fas fa-plus-circle"></i> Entrada
+							</label>
+
+							<input type="radio" class="btn-check" name="stockType" id="stockSaida" value="saida" autocomplete="off">
+							<label class="btn btn-outline-danger" for="stockSaida">
+								<i class="fas fa-minus-circle"></i> Saída
+							</label>
+						</div>
+					</div>
+
+					<div class="mb-3">
+						<label class="form-label fw-bold">Quantidade</label>
+						<input type="number" class="form-control" id="stockQuantity" min="1" step="1" value="1" placeholder="Digite a quantidade">
+					</div>
+
+					<div class="mb-3">
+						<label class="form-label fw-bold">Observação</label>
+						<textarea class="form-control" id="stockObservation" rows="2" placeholder="Motivo do ajuste (opcional)"></textarea>
+					</div>
+
+					<div class="alert alert-secondary">
+						<strong>Novo Estoque:</strong> <span id="newStockPreview">0</span>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+						<i class="fas fa-times"></i> Cancelar
+					</button>
+					<button type="button" class="btn btn-primary" id="confirmAdjustStockBtn">
+						<i class="fas fa-check"></i> Confirmar Ajuste
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	{% endif %}
 {% endblock %}
 {% block script %}
 	{% include 'script.html' %}

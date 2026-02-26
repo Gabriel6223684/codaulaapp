@@ -672,8 +672,25 @@ body {
 }
 
 /* Métodos de Pagamento */
-.payment-methods {
+.payment-methods-section {
     background: transparent;
+    padding: 0;
+    margin: 0;
+}
+
+.payment-method-label {
+    font-size: 13.5px;
+    color: var(--gray-700);
+    margin-bottom: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.payment-method-label i {
+    color: var(--primary-blue);
+    font-size: 15px;
 }
 
 .payment-label {

@@ -490,6 +490,8 @@ class Sale extends Base
             
             $id_venda = $form['id_venda'] ?? null;
             $id_pagamento = $form['id_pagamento'] ?? null;
+            $tipo = $form['tipo'] ?? 'avista'; // 'avista' or 'parcelado'
+            $metodo = $form['metodo'] ?? null; // 'pix', 'cartao', 'dinheiro'
 
             if (is_null($id_venda) || empty($id_venda)) {
                 return $this->SendJson($response, [
@@ -498,31 +500,49 @@ class Sale extends Base
                 ], 403);
             }
 
-            if (is_null($id_pagamento) || empty($id_pagamento)) {
-                return $this->SendJson($response, [
-                    'status' => false,
-                    'msg' => 'Restrição: O termo de pagamento é obrigatório!'
-                ], 403);
+            // Se for parcelado, o termo de pagamento é obrigatório
+            if ($tipo === 'parcelado') {
+                if (is_null($id_pagamento) || empty($id_pagamento)) {
+                    return $this->SendJson($response, [
+                        'status' => false,
+                        'msg' => 'Restrição: O termo de pagamento é obrigatório para vendas parceladas!'
+                    ], 403);
+                }
+
+                // Verificar se o termo de pagamento existe
+                $paymentTerm = SelectQuery::select('id')
+                    ->from('payment_terms')
+                    ->where('id', '=', $id_pagamento)
+                    ->fetch();
+
+                if (!$paymentTerm) {
+                    return $this->SendJson($response, [
+                        'status' => false,
+                        'msg' => 'Restrição: Termo de pagamento não encontrado!'
+                    ], 403);
+                }
             }
 
-            // Verificar se o termo de pagamento existe
-            $paymentTerm = SelectQuery::select('id')
-                ->from('payment_terms')
-                ->where('id', '=', $id_pagamento)
-                ->fetch();
+            // Preparar dados para atualização
+            $updateData = [
+                'data_atualizacao' => date('Y-m-d H:i:s')
+            ];
 
-            if (!$paymentTerm) {
-                return $this->SendJson($response, [
-                    'status' => false,
-                    'msg' => 'Restrição: Termo de pagamento não encontrado!'
-                ], 403);
+            // Adicionar termo de pagamento se fornecido
+            if (!is_null($id_pagamento) && !empty($id_pagamento)) {
+                $updateData['id_pagamento'] = $id_pagamento;
+            }
+
+            // Adicionar tipo de pagamento (avista/parcelado)
+            $updateData['tipo_pagamento'] = $tipo;
+
+            // Adicionar método de pagamento (pix, cartao, dinheiro) se fornecido
+            if (!is_null($metodo) && !empty($metodo)) {
+                $updateData['metodo_pagamento'] = $metodo;
             }
 
             $IsUpdate = UpdateQuery::table('sale')
-                ->set([
-                    'id_pagamento' => $id_pagamento,
-                    'data_atualizacao' => date('Y-m-d H:i:s')
-                ])
+                ->set($updateData)
                 ->where('id', '=', $id_venda)
                 ->update();
 
@@ -535,7 +555,12 @@ class Sale extends Base
 
             return $this->SendJson($response, [
                 'status' => true,
-                'msg' => 'Termo de pagamento salvo com sucesso!'
+                'msg' => 'Pagamento salvo com sucesso!',
+                'data' => [
+                    'tipo' => $tipo,
+                    'metodo' => $metodo,
+                    'id_pagamento' => $id_pagamento
+                ]
             ], 200);
         } catch (\Exception $e) {
             return $this->SendJson($response, [

@@ -11,6 +11,7 @@
 
 <body>
 
+    <!-- Modal Pesquisa Produto -->
     <div class="modal fade" id="pesquisaProdutoModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
         aria-labelledby="staticBackdropLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
@@ -44,6 +45,228 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-danger" data-bs-dismiss="modal">
                         Cancelar (F8)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Finalizar Venda -->
+    <div class="modal fade" id="finalizarVendaModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+        aria-labelledby="finalizarVendaLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h1 class="modal-title fs-5" id="finalizarVendaLabel">
+                        <i class="fas fa-cash-register"></i> Finalizar Venda
+                    </h1>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Resumo da Venda -->
+                    <div class="alert alert-info mb-3">
+                        <h5 class="alert-heading"><i class="fas fa-receipt"></i> Resumo da Venda</h5>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <small class="text-muted">Subtotal:</small>
+                                <p class="mb-0 fw-bold" id="modalSubtotal">R$ 0,00</p>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted">Desconto:</small>
+                                <p class="mb-0 fw-bold text-success" id="modalDesconto">R$ 0,00</p>
+                            </div>
+                            <div class="col-md-4">
+                                <small class="text-muted">Total:</small>
+                                <p class="mb-0 fw-bold text-primary" id="modalTotal">R$ 0,00</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tipo de Pagamento: À Vista ou Parcelado (OBRIGATÓRIO) -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-hand-holding-usd"></i> Tipo de Pagamento <span class="text-danger">*</span>
+                        </label>
+                        <div class="payment-buttons" id="modalPaymentTypeButtons">
+                            <button type="button" class="payment-btn active" data-type="avista">
+                                <i class="fas fa-money-bill-wave"></i>
+                                <span>À Vista</span>
+                            </button>
+                            <button type="button" class="payment-btn" data-type="parcelado">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>Parcelado</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Forma de Pagamento (para à vista) -->
+                    <div class="mb-3" id="avistaPaymentSection">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-wallet"></i> Forma de Pagamento
+                        </label>
+                        <div class="payment-buttons" id="modalPaymentButtons">
+                            <button type="button" class="payment-btn" data-method="dinheiro">
+                                <i class="fas fa-money-bill-wave"></i>
+                                <span>Dinheiro</span>
+                            </button>
+                            <button type="button" class="payment-btn active" data-method="pix">
+                                <i class="fas fa-qrcode"></i>
+                                <span>Pix</span>
+                            </button>
+                            <button type="button" class="payment-btn" data-method="cartao">
+                                <i class="fas fa-credit-card"></i>
+                                <span>Cartão</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Detalhes do Pagamento PIX -->
+                    <div class="mb-3" id="pixPaymentDetails" style="display: block;">
+                        <div class="card">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0"><i class="fas fa-qrcode"></i> Pagamento via PIX</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 text-center">
+                                        <label class="form-label fw-bold">QR Code</label>
+                                        <div class="qrcode-container p-3 bg-white border rounded">
+                                            <img id="pixQrCode" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNTAiIGhlaWdodD0iMTUwIj48cmVjdCB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgZmlsbD0iI2ZmZiIvPjx0ZXh0IHg9Ijc1IiB5PSI3NSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgZm9udC1zaXplPSIxMCIgZmlsbD0iIzAwMCI+UVJDb2RlPC90ZXh0Pjwvc3ZnPg==" alt="QR Code PIX" style="max-width: 150px;">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold">Copia e Cola</label>
+                                        <div class="input-group mb-2">
+                                            <input type="text" id="pixCopiaCola" class="form-control" placeholder="Código PIX Copia e Cola" readonly>
+                                            <button class="btn btn-outline-primary" type="button" onclick="copyPixCode()" title="Copiar">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                        </div>
+                                        <small class="text-muted">Abra seu aplicativo de banco, escaneie o QR Code ou cole o código acima.</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detalhes do Pagamento com Cartão -->
+                    <div class="mb-3" id="cardPaymentDetails" style="display: none;">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0"><i class="fas fa-credit-card"></i> Pagamento com Cartão</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-2">
+                                        <label class="form-label fw-bold">Número do Cartão</label>
+                                        <input type="text" id="cardNumber" class="form-control" placeholder="0000 0000 0000 0000" maxlength="19">
+                                    </div>
+                                    <div class="col-md-6 mb-2">
+                                        <label class="form-label fw-bold">Nome do Titular</label>
+                                        <input type="text" id="cardHolder" class="form-control" placeholder="Nome como no cartão">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4 mb-2">
+                                        <label class="form-label fw-bold">Data de Validade</label>
+                                        <input type="text" id="cardExpiry" class="form-control" placeholder="MM/AA" maxlength="5">
+                                    </div>
+                                    <div class="col-md-4 mb-2">
+                                        <label class="form-label fw-bold">CVV</label>
+                                        <input type="text" id="cardCvv" class="form-control" placeholder="123" maxlength="4">
+                                    </div>
+                                    <div class="col-md-4 mb-2">
+                                        <label class="form-label fw-bold">Bandeira</label>
+                                        <select id="cardBrand" class="form-select">
+                                            <option value="">Selecione...</option>
+                                            <option value="visa">Visa</option>
+                                            <option value="mastercard">Mastercard</option>
+                                            <option value="elo">Elo</option>
+                                            <option value="amex">American Express</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                        
+                        <!-- Quantidade de Parcelas -->
+                        <div class="mb-2">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-calendar-alt"></i> Quantidade de Parcelas <span class="text-danger">*</span>
+                            </label>
+                            <select id="modalInstallmentCountSelect" class="form-select">
+                                <option value="">Selecione...</option>
+                                <option value="1">1x</option>
+                                <option value="2">2x</option>
+                                <option value="3">3x</option>
+                                <option value="4">4x</option>
+                                <option value="5">5x</option>
+                                <option value="6">6x</option>
+                                <option value="7">7x</option>
+                                <option value="8">8x</option>
+                                <option value="9">9x</option>
+                                <option value="10">10x</option>
+                                <option value="11">11x</option>
+                                <option value="12">12x</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Informações de Parcelamento -->
+                    <div class="row mb-3" id="modalInstallmentInfo" style="display: none;">
+                        <div class="col-md-6">
+                            <small class="text-muted">Número de Parcelas:</small>
+                            <p class="mb-0 fw-bold" id="modalInstallmentCount">1x</p>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted">Valor de Cada Parcela:</small>
+                            <p class="mb-0 fw-bold" id="modalInstallmentValue">R$ 0,00</p>
+                        </div>
+                    </div>
+
+                    <!-- Desconto e Juros -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-percent"></i> Desconto / Juros
+                        </label>
+                        <div class="row">
+                            <div class="col-6">
+                                <input type="text" id="modalDiscountValue" placeholder="Desconto em R$" class="form-control">
+                            </div>
+                            <div class="col-6">
+                                <input type="text" id="modalInterestValue" placeholder="Juros em R$" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Parcelas Detalhadas -->
+                    <div class="mb-3" id="modalInstallmentsSection" style="display: none;">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-calendar-alt"></i> Parcelas
+                        </label>
+                        <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+                            <table class="table table-sm table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Valor</th>
+                                        <th>Vencimento</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="modalInstallmentsBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="button" class="btn btn-success btn-lg" id="confirmFinalizeButton">
+                        <i class="fas fa-check"></i> Confirmar e Finalizar Venda
                     </button>
                 </div>
             </div>
@@ -175,68 +398,6 @@
                 </div>
                 
                 <div class="payment-section">
-                    <div class="discount-section">
-                        <p class="discount-label">
-                            <i class="fas fa-percent"></i> Desconto / Juros
-                        </p>
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="input-group">
-                                    <input type="text" id="discountValue" placeholder="Desconto em R$" aria-label="Desconto"
-                                        class="form-control">
-
-                                    <input type="text" id="interestValue" placeholder="Juros em R$" aria-label="Juros"
-                                        class="form-control">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Payment Terms Section -->
-                    <div class="payment-terms-section">
-                        <p class="payment-terms-label">
-                            <i class="fas fa-credit-card"></i> Condição de Pagamento
-                        </p>
-                        <div class="row">
-                            <div class="col-12">
-                                <select id="paymentTermsSelect" class="form-select">
-                                    <option value="">Selecione a condição de pagamento...</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="row mt-2" id="installmentInfo" style="display: none;">
-                            <div class="col-6">
-                                <small class="text-muted">Parcelas:</small>
-                                <span id="installmentCount" class="fw-bold">1x</span>
-                            </div>
-                            <div class="col-6">
-                                <small class="text-muted">Valor parcela:</small>
-                                <span id="installmentValue" class="fw-bold">R$ 0,00</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Installments Display Section -->
-                    <div class="installments-section mt-3" id="installmentsSection" style="display: none;">
-                        <p class="installments-label">
-                            <i class="fas fa-calendar-alt"></i> Parcelas
-                        </p>
-                        <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
-                            <table class="table table-sm table-bordered" id="installmentsTable">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Valor</th>
-                                        <th>Vencimento</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="installmentsBody">
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    
                     <div class="total-section">
                         <div class="subtotal">
                             <span>Subtotal:</span>
@@ -249,7 +410,7 @@
                     </div>
 
                     <div class="action-buttons">
-                        <button class="btn-finalize">
+                        <button class="btn-finalize" id="btnFinalizarVenda">
                             <i class="fas fa-check-circle"></i> Finalizar Venda
                         </button>
                         <button class="btn-cancel">

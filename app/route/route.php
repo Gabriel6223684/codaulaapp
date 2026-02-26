@@ -27,6 +27,8 @@ $app->group('/product', function (RouteCollectorProxy $group) {
     $group->get('/cadastro', Product::class . ':cadastro');
     $group->get('/alterar/{id}', Product::class . ':alterar');
     $group->get('/print', Product::class . ':print');
+    $group->get('/getstock/{id}', Product::class . ':getStock');
+    $group->post('/adjuststock', Product::class . ':adjustStock');
     $group->post('/insert', Product::class . ':insert');
     $group->post('/update', Product::class . ':update');
     $group->delete('/deletar/{id}', Product::class . ':deletar');
