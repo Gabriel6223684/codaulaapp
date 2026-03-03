@@ -28,13 +28,13 @@ final class StockMovement extends AbstractMigration
             ->addColumn('quantidade_saida', 'decimal', ['precision' => 18, 'scale' => 4, 'null' => true])
             ->addColumn('estoque_atual', 'decimal', ['precision' => 18, 'scale' => 4, 'null' => true])
             ->addColumn('observacao', 'text', ['null' => true])
+            ->addColumn('tipo', 'string', ['limit' => 50, 'null' => true, 'default' => 'entrada'])
+            ->addColumn('origem_movimento', 'string', ['limit' => 50, 'null' => true, 'default' => 'ajuste'])
             ->addColumn('data_cadastro', 'datetime', ['null' => true, 'default' => 'CURRENT_TIMESTAMP'])
             ->addColumn('data_atualizacao', 'datetime', ['null' => true, 'default' => 'CURRENT_TIMESTAMP'])
             ->addForeignKey('id_item_compra', 'item_purchase', 'id', ['delete' => 'CASCADE', 'update' => 'NO ACTION'])
             ->addForeignKey('id_item_venda', 'item_sale', 'id', ['delete' => 'CASCADE', 'update' => 'NO ACTION'])
             ->addForeignKey('id_produto', 'product', 'id', ['delete' => 'CASCADE', 'update' => 'NO ACTION'])
             ->create();
-        $this->execute('alter table stock_movement add column tipo stock_movement_direction');
-        $this->execute('alter table stock_movement add column origem_movimento stock_movement_origin');
     }
 }

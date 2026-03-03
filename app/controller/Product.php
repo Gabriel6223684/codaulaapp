@@ -291,7 +291,7 @@ class Product extends Base
     }
 
     /**
-     * Adjust stock for a product
+     * Adjust stock for a product - direct stock setting
      */
     public function adjustStock($request, $response)
     {
@@ -299,9 +299,8 @@ class Product extends Base
             $form = $request->getParsedBody();
             
             $id_produto = $form['id_produto'] ?? null;
-            $quantidade = floatval(str_replace(',', '.', $form['quantidade'] ?? 0));
-            $tipo = $form['tipo'] ?? 'entrada'; // 'entrada' or 'saida'
-            $observacao = $form['observacao'] ?? '';
+            $novo_estoque = floatval(str_replace(',', '.', $form['novo_estoque'] ?? 0));
+            $observacao = $form['observacao'] ?? 'Ajuste de estoque';
 
             if (is_null($id_produto) || empty($id_produto)) {
                 return $this->SendJson($response, [
@@ -310,10 +309,10 @@ class Product extends Base
                 ], 400);
             }
 
-            if ($quantidade <= 0) {
+            if ($novo_estoque < 0) {
                 return $this->SendJson($response, [
                     'status' => false,
-                    'msg' => 'A quantidade deve ser maior que zero'
+                    'msg' => 'O novo estoque não pode ser negativo'
                 ], 400);
             }
 
@@ -343,15 +342,29 @@ class Product extends Base
                 $estoque_atual += $entrada - $saida;
             }
 
-            // Determinar quantidade de entrada ou saída
-            if ($tipo === 'saida') {
-                $quantidade_entrada = null;
-                $quantidade_saida = $quantidade;
-                $novo_estoque = $estoque_atual - $quantidade;
-            } else {
-                $quantidade_entrada = $quantidade;
+            // Calcular diferença para registrar
+            $diferenca = $novo_estoque - $estoque_atual;
+            
+            if ($diferenca > 0) {
+                // Entrada de estoque
+                $quantidade_entrada = $diferenca;
                 $quantidade_saida = null;
-                $novo_estoque = $estoque_atual + $quantidade;
+                $tipo = 'entrada';
+            } elseif ($diferenca < 0) {
+                // Saída de estoque
+                $quantidade_entrada = null;
+                $quantidade_saida = abs($diferenca);
+                $tipo = 'saida';
+            } else {
+                // Não houve alteração
+                return $this->SendJson($response, [
+                    'status' => true,
+                    'msg' => 'O estoque já está com o valor informado!',
+                    'data' => [
+                        'estoque_anterior' => $estoque_atual,
+                        'estoque_atual' => $novo_estoque
+                    ]
+                ], 200);
             }
 
             // Criar registro de movimento de estoque
@@ -379,9 +392,7 @@ class Product extends Base
                 'msg' => 'Estoque ajustado com sucesso!',
                 'data' => [
                     'estoque_anterior' => $estoque_atual,
-                    'estoque_atual' => $novo_estoque,
-                    'quantidade' => $quantidade,
-                    'tipo' => $tipo
+                    'estoque_atual' => $novo_estoque
                 ]
             ], 201);
         } catch (\Exception $e) {
